@@ -46,11 +46,13 @@ class Vector {
 	}
 }
 
-class World {
-	constructor({ height = 600, width = 1000 }) {
-		this.height = height;
-		this.width = width;
-		this.path = [
+let Maps = {
+	0: {
+		width: 1000,
+		height: 600,
+		backgroundColor: "#fcbf49",
+		pathColor: "#003049",
+		path: [
 			new Vector(-50, 100),
 			new Vector(100, 100),
 			new Vector(100, 300),
@@ -60,17 +62,25 @@ class World {
 			new Vector(300, 400),
 			new Vector(600, 400),
 			new Vector(600, 200),
-			new Vector(1050, 200)
-		];
+			new Vector(1050, 200),
+		],
+	}
+}
+
+class World {
+	constructor({ mapnr = 0 }) {
+		Object.assign(this, Maps[mapnr]);
 	}
 	isOutOfBounds(vector) {
 		return vector.x < 0 || vector.x > this.width || vector.y < 0 || vector.y > this.height;
 	}
 	draw(ctx) {
+		ctx.fillStyle = this.backgroundColor;
+		ctx.fillRect(0, 0, this.width, this.height);
 		ctx.lineJoin = "round"
 		ctx.beginPath();
-		ctx.strokeStyle = "#8F96A2";
-		ctx.lineWidth = 25;
+		ctx.strokeStyle = this.pathColor;
+		ctx.lineWidth = 48;
 		this.path.forEach((vector, index) => {
 			if (index === 0) return ctx.moveTo(vector.x, vector.y);
 			ctx.lineTo(vector.x, vector.y);
@@ -84,8 +94,8 @@ let Enemies = {
 		image: newImg("./resources/enemies/base.png"),
 		drop: 10,
 		walkingSpeed: 2,
-		width: 20,
-		height: 20,
+		width: 48,
+		height: 48,
 		health: 100,
 		damage: 1,
 		armor: 2,
@@ -93,9 +103,9 @@ let Enemies = {
 	Goblin: {
 		image: newImg("./resources/enemies/base.png"),
 		drop: 5,
-		walkingSpeed: 3,
-		width: 15,
-		height: 15,
+		walkingSpeed: 4,
+		width: 32,
+		height: 32,
 		health: 50,
 		damage: 1,
 		armor: 1,
@@ -155,46 +165,46 @@ class Enemy {
 
 const Towers = {
 	Cannon: {
-		width: 20,
-		height: 20,
+		image: newImg("./resources/towers/cannon2.png"),
+		width: 48,
+		height: 48,
 		range: 100,
-		speed: 4,
+		speed: 8,
 		price: 200,
 		projectile: {
 			damage: 100,
-			speed: 8,
+			speed: 16,
 			penetration: 3,
 			radius: 5,
 		},
-		image: newImg("./resources/towers/cannon.png")
 	},
 	Peashooter: {
-		width: 20,
-		height: 20,
+		image: newImg("./resources/towers/peashooter.png"),
+		width: 48,
+		height: 48,
 		range: 150,
-		speed: 12,
+		speed: 24,
 		price: 100,
 		projectile: {
 			damage: 25,
-			speed: 12,
+			speed: 24,
 			penetration: 1,
 			radius: 2,
 		},
-		image: newImg("./resources/towers/peashooter.png")
 	},
 	Bomber: {
-		width: 20,
-		height: 20,
+		image: newImg("./resources/towers/cannon.png"),
+		width: 48,
+		height: 48,
 		range: 80,
-		speed: 2,
+		speed: 4,
 		price: 300,
 		projectile: {
 			damage: 200,
-			speed: 4,
+			speed: 8,
 			penetration: 5,
 			radius: 4,
 		},
-		image: newImg("./resources/towers/cannon.png")
 	}
 }
 
@@ -224,13 +234,8 @@ class Tower {
 		this.pos = vector;
 		this.rotation = 0;
 		this.cooldown = 0;
-		this.height = 20;
-		this.width = 20;
 
-		this.range = Towers[type].range;
-		this.speed = Towers[type].speed;
-		this.projectile = Towers[type].projectile;
-		this.image = Towers[type].image;
+		Object.assign(this, Towers[type]);
 
 		this.method = "first";
 
@@ -335,10 +340,12 @@ class Game {
 		let __game = this;
 		this.mousepos = new Vector(0, 0);
 		this.canvas = document.createElement("canvas");
+		this.canvas.imageSmoothingEnabled = false;
 		let gamediv = document.getElementById("game")
 		gamediv.appendChild(this.canvas);
 		this.ctx = this.canvas.getContext("2d");
 		this.selectedTower = null;
+		this.fps = 1000 / 30;
 
 		(function () {
 			let towerDisplay = document.createElement("div");
@@ -403,7 +410,7 @@ class Game {
 		menu.appendChild(playPause);
 		playPause.addEventListener("click", () => {
 			this.togglePlay();
-		})
+		});
 
 		let towermenu = document.createElement("div");
 		towermenu.className = "tower-menu";
@@ -431,7 +438,11 @@ class Game {
 					if (elem) elem.classList.remove("active");
 					this.classList.add("active");
 				}
-				__game.selectedTower = (__game.selectedTower == towername) ? null : towername;
+				if (__game.selectedTower == towername) {
+					__game.deselectBuyTower();
+				} else {
+					__game.selectedTower = towername;
+				}
 			})
 		});
 
@@ -451,6 +462,7 @@ class Game {
 				let towerln = player.towers.length;
 				for (let i = 0; i < towerln; i++) {
 					let tower = player.towers[i];
+					console.log(tower.width)
 					if (tower.pos.x < this.mousepos.x && tower.pos.x + tower.width > this.mousepos.x &&
 						tower.pos.y < this.mousepos.y && tower.pos.y + tower.height > this.mousepos.y) {
 						this.displayTower(tower);
@@ -462,7 +474,7 @@ class Game {
 				// Place new tower
 				let { width, height } = Towers[this.selectedTower];
 				if (player.buyTower({ vector: new Vector(e.clientX - width / 2, e.clientY - height / 2), type: this.selectedTower })) {
-					this.selectedTower = null;
+					this.deselectBuyTower();
 				}
 			}
 		});
@@ -473,16 +485,27 @@ class Game {
 		});
 		this.canvas.addEventListener("mouseleave", function () {
 			__game.hideCursor = true;
-		})
+		});
+		this.wave = {
+			number: 0,
+			queue: [],
+			passedTime: 0
+		}
+	}
+	deselectBuyTower() {
+		this.selectedTower = null;
+		let elem = document.querySelector(".tower.active");
+		elem && elem.classList.remove("active");
 	}
 	startAnimation() {
-		this.animid = requestAnimationFrame(this.update.bind(this));
+		this.animid = requestAnimationFrame(this.draw.bind(this));
 	}
 	stopAnimation() {
-		return cancelAnimationFrame(this.animid);
+		cancelAnimationFrame(this.animid);
 	}
 	togglePlay() {
 		this.play = !this.play;
+		if (this.play) this.update();
 	}
 	checkEnemyCollisions() {
 		let projln = this.projectiles.length;
@@ -524,27 +547,43 @@ class Game {
 		this.ctx.arc(pos.x, pos.y, range, 0, Math.PI * 2);
 		this.ctx.fill();
 	}
-	update() {
-		if (this.play) {
-			this.projectiles.forEach(proj => {
-				proj.update();
-				if (this.world.isOutOfBounds(proj.pos)) {
-					this.projectiles.splice(this.projectiles.indexOf(proj), 1);
-				}
-			});
-			this.enemies.map(enemy => {
-				enemy.update();
-			})
-			this.enemies = this.enemies.filter(enemy => {
-				return enemy.alive && !enemy.won;
-			});
-			this.players.forEach(player => player.update());
-			this.checkEnemyCollisions();
+	nextWave() {
+		let nr = ++this.wave.number;
+		this.wave.queue = getWave(nr);
+	}
+	spawnEnemies() {
+		this.wave.passedTime += this.fps;
+		if (this.wave.queue.length === 0) {
+			return;
+		} else if (this.wave.queue[0].enemies.length === 0) {
+			if (this.wave.passedTime > this.wave.queue[0].delay) {
+				this.wave.passedTime -= this.wave.queue[0].delay;
+				this.wave.queue.shift();
+			}
+		} else if (this.wave.passedTime > this.wave.queue[0].interval) {
+			this.wave.passedTime -= this.wave.queue[0].interval;
+			let enem = this.wave.queue[0].enemies.shift();
+			this.enemies.push(enem);
 		}
-
-		this.draw();
-
-		requestAnimationFrame(this.update.bind(this));
+	}
+	update() {
+		if (!this.play) return;
+		this.projectiles.forEach(proj => {
+			proj.update();
+			if (this.world.isOutOfBounds(proj.pos)) {
+				this.projectiles.splice(this.projectiles.indexOf(proj), 1);
+			}
+		});
+		this.enemies.map(enemy => {
+			enemy.update();
+		})
+		this.enemies = this.enemies.filter(enemy => {
+			return enemy.alive && !enemy.won;
+		});
+		this.players.forEach(player => player.update());
+		this.checkEnemyCollisions();
+		this.spawnEnemies();
+		setTimeout(this.update.bind(this), this.fps);
 	}
 	draw() {
 		let canvas = this.canvas,
@@ -580,6 +619,7 @@ class Game {
 		ctx.font = "24px 'Segoe UI'";
 		ctx.fillText(`Lives: ${this.lives}`, 10, 30);
 		ctx.fillText(`Coin: ${this.players[0].money}`, canvas.width - 120, 30);
+		requestAnimationFrame(this.draw.bind(this));
 	}
 }
 
@@ -616,23 +656,44 @@ function isCircleRectColliding(circle, rect) {
 	return (dx * dx + dy * dy <= (circle.radius * circle.radius));
 }
 
+/*	Queue Object:
+ *		enemies: []Enemy
+ *			which enemies to spawn
+ *		interval: Number
+ *			ms to wait between each enemy. defaults to 250ms
+ *		delay: Number
+*			ms to wait until next batch. defaults to 1000ms
+ */
+function addN(iterations, classFunction) {
+	let restArgs = Array.prototype.slice.call(arguments, 3);
+	if (restArgs.length == 0) restArgs = [{}];
+	let array = [];
+	for (let i = 0; i < iterations; i++) {
+		array.push(new classFunction(...restArgs));
+	}
+	return array;
+}
+
 function getWave(wavenr) {
 	let queue = [];
 
-	function pushN(array, iterations, classFunction) {
-		let restArgs = arguments.slice(3);
-		for (let i = 0; i < iterations; i++) {
-			array.push(new classFunction(...restArgs));
-		}
-	}
 	if (wavenr > 0) {
-		pushN(queue, 15, Enemy);
+		let batch = {
+			enemies: addN(15, Enemy),
+			interval: 1000,
+			delay: 10000,
+		}
+		queue.push(batch);
 	}
 	if (wavenr > 5) {
-		pushN(queue, 15, Enemy, { type: "Ogre" });
+		let batch = {
+			enemies: addN(15, Enemy, { type: "Goblin" }),
+			interval: 1000,
+			delay: 10000,
+		}
+		queue.push(batch);
 	}
 	if (wavenr > 10) {
-
 	}
 	return queue;
 }
