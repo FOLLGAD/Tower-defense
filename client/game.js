@@ -4,6 +4,12 @@ function newImg(src) {
 	return img;
 }
 
+let UI = {
+	fastForward: newImg("./resources/ui/fast-forward.png"),
+	play: newImg("./resources/ui/play.png"),
+	pause: newImg("./resources/ui/pause.png")
+}
+
 class Vector {
 	constructor(x, y) {
 		this.x = x;
@@ -176,6 +182,7 @@ const Towers = {
 			speed: 16,
 			penetration: 3,
 			radius: 5,
+			color: "#333",
 		},
 	},
 	Peashooter: {
@@ -190,6 +197,7 @@ const Towers = {
 			speed: 24,
 			penetration: 1,
 			radius: 2,
+			color: "#70b53f",
 		},
 	},
 	Bomber: {
@@ -203,7 +211,8 @@ const Towers = {
 			damage: 200,
 			speed: 8,
 			penetration: 5,
-			radius: 4,
+			radius: 8,
+			color: "#292d25",
 		},
 	}
 }
@@ -212,16 +221,14 @@ class Projectile {
 	constructor({ pos, vel, type }) {
 		this.pos = pos;
 		this.vel = vel;
-		this.radius = type.radius;
-		this.damage = type.damage;
-		this.penetration = type.penetration;
+		Object.assign(this, type);
 		this.hitlist = [];
 	}
 	update(deltatime) {
 		this.pos.moveVector(this.vel);
 	}
 	draw(ctx) {
-		ctx.fillStyle = "#e0a553";
+		ctx.fillStyle = this.color;
 		ctx.beginPath();
 		ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
 		ctx.fill();
@@ -345,7 +352,9 @@ class Game {
 		gamediv.appendChild(this.canvas);
 		this.ctx = this.canvas.getContext("2d");
 		this.selectedTower = null;
-		this.fps = 1000 / 30;
+		this.fps = this.standardFps = 30;
+
+		this.fastForwarded = false;
 
 		(function () {
 			let towerDisplay = document.createElement("div");
@@ -405,8 +414,33 @@ class Game {
 		})();
 
 		let menu = document.getElementById("menu");
-		let playPause = document.createElement("button");
-		playPause.className = "play-pause";
+		let fastForwardOrNextWave = document.createElement("div");
+		fastForwardOrNextWave.className = "speed";
+		fastForwardOrNextWave.addEventListener("click", function () {
+			if (__game.wave.active) {
+				__game.toggleFastForward();
+			} else {
+				__game.nextWave();
+			}
+		})
+		fastForwardOrNextWave.appendChild((function () {
+			let img = document.createElement("img");
+			img.src = UI.fastForward.src;
+			img.className = "fast-forward";
+			img.style.display = "none";
+			return img;
+		})());
+		fastForwardOrNextWave.appendChild((function () {
+			let img = document.createElement("img");
+			img.src = UI.play.src;
+			img.className = "play";
+			img.style.display = null;
+			return img;
+		})());
+		menu.appendChild(fastForwardOrNextWave);
+
+		let playPause = document.createElement("div");
+		playPause.className = "speed play-pause";
 		menu.appendChild(playPause);
 		playPause.addEventListener("click", () => {
 			this.togglePlay();
@@ -462,7 +496,6 @@ class Game {
 				let towerln = player.towers.length;
 				for (let i = 0; i < towerln; i++) {
 					let tower = player.towers[i];
-					console.log(tower.width)
 					if (tower.pos.x < this.mousepos.x && tower.pos.x + tower.width > this.mousepos.x &&
 						tower.pos.y < this.mousepos.y && tower.pos.y + tower.height > this.mousepos.y) {
 						this.displayTower(tower);
@@ -489,7 +522,8 @@ class Game {
 		this.wave = {
 			number: 0,
 			queue: [],
-			passedTime: 0
+			passedTime: 0,
+			active: false
 		}
 	}
 	deselectBuyTower() {
@@ -550,12 +584,37 @@ class Game {
 	nextWave() {
 		let nr = ++this.wave.number;
 		this.wave.queue = getWave(nr);
+		menu.querySelector(".play").style.display = "none";
+		menu.querySelector(".fast-forward").style.display = null;
+		this.wave.active = true;
+	}
+	endWave() {
+		let menu = document.getElementById("menu");
+		menu.querySelector(".play").style.display = null;
+		menu.querySelector(".fast-forward").style.display = "none";
+		this.wave.active = false;
+		this.wave.passedTime = 0;
+	}
+	resetFastForward() {
+		this.fastForwarded = false;
+		this.fps = this.standardFps;
+	}
+	toggleFastForward() {
+		if (this.fastForwarded) {
+			this.fastForwarded = false;
+			this.fps = this.standardFps;
+		} else {
+			this.fastForwarded = true;
+			this.fps = this.standardFps * 2;
+		}
+	}
+	currentlyInWave() {
+		return (this.wave.queue.length !== 0);
 	}
 	spawnEnemies() {
-		this.wave.passedTime += this.fps;
-		if (this.wave.queue.length === 0) {
-			return;
-		} else if (this.wave.queue[0].enemies.length === 0) {
+		this.wave.passedTime += 1000 / this.fps;
+		if (this.wave.queue[0].enemies.length === 0) {
+			if (this.wave.queue.length === 1 && this.enemies.length === 0) return this.endWave();
 			if (this.wave.passedTime > this.wave.queue[0].delay) {
 				this.wave.passedTime -= this.wave.queue[0].delay;
 				this.wave.queue.shift();
@@ -576,14 +635,16 @@ class Game {
 		});
 		this.enemies.map(enemy => {
 			enemy.update();
-		})
+		});
 		this.enemies = this.enemies.filter(enemy => {
 			return enemy.alive && !enemy.won;
 		});
 		this.players.forEach(player => player.update());
 		this.checkEnemyCollisions();
-		this.spawnEnemies();
-		setTimeout(this.update.bind(this), this.fps);
+		if (this.wave.active) {
+			this.spawnEnemies();
+		}
+		setTimeout(this.update.bind(this), 1000 / this.fps);
 	}
 	draw() {
 		let canvas = this.canvas,
@@ -628,7 +689,6 @@ document.addEventListener("DOMContentLoaded", NewGame);
 let gamesession;
 function NewGame() {
 	gamesession = new Game({});
-	gamesession.enemies.push(new Enemy({}));
 	gamesession.startAnimation();
 	gamesession.togglePlay();
 }

@@ -68,3 +68,9 @@ button.play-pause {
 	line-height: 16px;
 	text-shadow: 1px 1px 2px white;
 }
+#menu .speed {
+	display: inline-block;
+	box-shadow: #eee 1px 1px 3px;
+	width: 50px;
+	height: 50px;
+}
