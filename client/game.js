@@ -58,6 +58,7 @@ let Maps = {
 		height: 600,
 		backgroundColor: "#fcbf49",
 		pathColor: "#003049",
+		pathWidth: 48,
 		path: [
 			new Vector(-50, 100),
 			new Vector(100, 100),
@@ -86,7 +87,7 @@ class World {
 		ctx.lineJoin = "round"
 		ctx.beginPath();
 		ctx.strokeStyle = this.pathColor;
-		ctx.lineWidth = 48;
+		ctx.lineWidth = this.pathWidth;
 		this.path.forEach((vector, index) => {
 			if (index === 0) return ctx.moveTo(vector.x, vector.y);
 			ctx.lineTo(vector.x, vector.y);
@@ -323,7 +324,7 @@ class Player {
 	}
 	buyTower({ vector, type = "Cannon" }) {
 		let towercost = Towers[type].price;
-		if (this.money - towercost >= 0) {
+		if (this.money - towercost >= 0 && gamesession.canPlaceTower(vector, type)) {
 			this.money = this.money - towercost;
 			this.towers.push(new Tower({ vector, type }));
 			return true;
@@ -575,8 +576,8 @@ class Game {
 		this.towerDisplay.selectedTower = tower;
 		let td = this.towerDisplay.elem;
 	}
-	drawTowerRange(pos, range) {
-		this.ctx.fillStyle = "rgba(100, 100, 150, 0.3)";
+	drawTowerRange(pos, range, highlight) {
+		this.ctx.fillStyle = highlight ? "rgba(180, 50, 50, 0.3)" : "rgba(100, 100, 100, 0.3)";
 		this.ctx.beginPath();
 		this.ctx.arc(pos.x, pos.y, range, 0, Math.PI * 2);
 		this.ctx.fill();
@@ -594,18 +595,22 @@ class Game {
 		menu.querySelector(".fast-forward").style.display = "none";
 		this.wave.active = false;
 		this.wave.passedTime = 0;
+		this.resetFastForward();
 	}
 	resetFastForward() {
 		this.fastForwarded = false;
 		this.fps = this.standardFps;
+		document.querySelector(".fast-forward").classList.remove("active");
 	}
 	toggleFastForward() {
 		if (this.fastForwarded) {
 			this.fastForwarded = false;
 			this.fps = this.standardFps;
+			document.querySelector(".fast-forward").classList.remove("active");
 		} else {
 			this.fastForwarded = true;
 			this.fps = this.standardFps * 2;
+			document.querySelector(".fast-forward").classList.add("active");
 		}
 	}
 	currentlyInWave() {
@@ -624,6 +629,45 @@ class Game {
 			let enem = this.wave.queue[0].enemies.shift();
 			this.enemies.push(enem);
 		}
+	}
+	canPlaceTower(vector, towername) {
+		let { width, height } = Towers[towername];
+		let player = this.players[0];
+		if (player.towers.some(tower => {
+			if (vector.x + width > tower.pos.x && vector.x < tower.pos.x + tower.width &&
+				vector.y + height > tower.pos.y && vector.y < tower.pos.y + tower.height) {
+				return true;
+			}
+			return false;
+		})) {
+			return false;
+		} else {
+			for (let i = 0; i < this.world.path.length - 1; i++) {
+				let p = this.world.path[i];
+				let np = this.world.path[i + 1];
+				let lw = this.world.pathWidth / 2;
+				let x, y, wid, hei;
+				if (p.x < np.x) {
+					x = p.x - lw;
+					wid = np.x - p.x + lw * 2;
+				} else {
+					x = np.x - lw;
+					wid = p.x - np.x + lw * 2;
+				}
+				if (p.y < np.y) {
+					y = p.y - lw;
+					hei = np.y - p.y + lw * 2;
+				} else {
+					y = np.y - lw;
+					hei = p.y - np.y + lw * 2;
+				}
+				if (vector.x < x + wid && vector.x + width > x &&
+					vector.y < y + hei && vector.y + height > y) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 	update() {
 		if (!this.play) return;
@@ -649,22 +693,24 @@ class Game {
 	draw() {
 		let canvas = this.canvas,
 			ctx = this.ctx;
+		let td = this.towerDisplay;
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		td.ctx.clearRect(0, 0, td.canvas.width, td.canvas.height);
 
 		this.world.draw(ctx);
 		this.enemies.forEach(enemy => enemy.draw(ctx));
 		this.projectiles.forEach(proj => proj.draw(ctx));
 		if (this.selectedTower != null && !this.hideCursor) {
 			let tw = Towers[this.selectedTower];
-			this.drawTowerRange(new Vector(this.mousepos.x, this.mousepos.y), tw.range);
+			let canPlace = this.canPlaceTower(new Vector(this.mousepos.x, this.mousepos.y).center(tw.width, tw.height), this.selectedTower);
+
+			this.drawTowerRange(new Vector(this.mousepos.x, this.mousepos.y), tw.range, !canPlace);
 			ctx.drawImage(tw.image, this.mousepos.x - tw.width / 2, this.mousepos.y - tw.height / 2, tw.width, tw.height);
 		}
-		let td = this.towerDisplay;
 		if (td.selectedTower) {
 			this.drawTowerRange(td.selectedTower.pos.center(-td.selectedTower.width, -td.selectedTower.height), td.selectedTower.range);
 		}
 		this.players.forEach(player => player.draw(ctx));
-		td.ctx.clearRect(0, 0, td.canvas.width, td.canvas.height);
 		if (td.selectedTower) {
 			let dx = 0;
 			let dy = 0;
@@ -678,8 +724,12 @@ class Game {
 		}
 		ctx.fillStyle = "#333"
 		ctx.font = "24px 'Segoe UI'";
+		ctx.textAlign = "left";
 		ctx.fillText(`Lives: ${this.lives}`, 10, 30);
-		ctx.fillText(`Coin: ${this.players[0].money}`, canvas.width - 120, 30);
+		ctx.textAlign = "right";
+		ctx.fillText(`Coin: ${this.players[0].money}`, canvas.width - 10, 30);
+		ctx.textAlign = "center";
+		ctx.fillText(`Wave: ${this.wave.number}`, canvas.width / 2, 30);
 		requestAnimationFrame(this.draw.bind(this));
 	}
 }
