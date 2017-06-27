@@ -335,19 +335,35 @@ class Game {
 		}
 		this.projectiles.splice(explosive);
 	}
-	displayTower(tower) {
-		this.towerDisplay.selectedTower = tower;
-		let td = this.towerDisplay.elem;
+	updateUpgrades(tower) {
+		let player = this.players[0];
 		let upgradediv = document.getElementById("upgrades");
 		upgradediv.innerHTML = "";
-		let btn = document.createElement("button");
-		btn.className = "upgrade-btn";
-		tower.upgrades.forEach(upg => {
-			let upgradeButton = btn.cloneNode();
-			upgradeButton.addEventListener("click", function () {
-				tower.upgrade(upg);
-			});
+		let baseBtn = document.createElement("button");
+		baseBtn.className = "upgrade-btn";
+		Object.keys(tower.upgrades).forEach(upg => {
+			let upgradeButton = baseBtn.cloneNode();
+			let upgrade = tower.upgrades[upg][tower.levels[upg]];
+
+			if (upgrade) {
+				upgradeButton.addEventListener("click", () => {
+					let price = upgrade.price;
+					if (player.money >= price) {
+						player.money -= price;
+						tower.upgrade(upg);
+						this.displayTower(tower);
+					}
+				});
+
+				upgradeButton.textContent = `${capFirstLetter(upg)}: ${upgrade.price}c`;
+				upgradediv.appendChild(upgradeButton);
+			}
 		})
+	}
+	displayTower(tower) {
+		this.towerDisplay.selectedTower = tower;
+		// let td = this.towerDisplay.elem;
+		this.updateUpgrades(tower);
 	}
 	drawTowerRange(pos, range, highlight) {
 		this.ctx.fillStyle = highlight ? "rgba(180, 50, 50, 0.3)" : "rgba(100, 100, 100, 0.3)";
@@ -508,6 +524,10 @@ class Game {
 		ctx.fillText(`Wave: ${this.wave.number}`, canvas.width / 2, 30);
 		requestAnimationFrame(this.draw.bind(this));
 	}
+}
+
+function capFirstLetter(string) {
+	return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 export default Game;

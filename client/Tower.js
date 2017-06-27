@@ -45,8 +45,11 @@ class Tower {
 			},
 		}
 	}
-	upgrade(index) {
-
+	upgrade(upgradeName) {
+		this.levels[upgradeName] += 1;
+		let level = this.levels[upgradeName];
+		let upgrade = this.upgrades[upgradeName][level - 1];
+		mergeDeep(this, upgrade);
 	}
 	isInRange(target) {
 		return this.pos.center(-this.width, -this.height).distanceTo(target.pos.center(-target.width, -target.height)) <= this.range;
@@ -148,7 +151,19 @@ Tower.Types = {
 			radius: 5,
 			color: "#70b53f",
 		},
-		upgrades: [],
+		upgrades: {
+			damage: [{
+				price: 50,
+				projectile: {
+					damage: 7.5
+				}
+			}, {
+				price: 100,
+				projectile: {
+					damage: 10
+				}
+			}],
+		},
 	},
 	Bomber: {
 		image: NewImage("./resources/towers/Bomber.png"),
@@ -168,8 +183,44 @@ Tower.Types = {
 			radius: 16,
 			color: "#292d25",
 		},
-		upgrades: [],
+		upgrades: {
+			damage: [{
+				price: 50
+			}],
+		},
 	}
 }
 
 export default Tower;
+
+/**
+ * Simple object check.
+ * @param item
+ * @returns {boolean}
+ */
+function isObject(item) {
+	return (item && typeof item === 'object' && !Array.isArray(item));
+}
+
+/**
+ * Deep merge two objects.
+ * @param target
+ * @param ...sources
+ */
+function mergeDeep(target, ...sources) {
+	if (!sources.length) return target;
+	const source = sources.shift();
+
+	if (isObject(target) && isObject(source)) {
+		for (const key in source) {
+			if (isObject(source[key])) {
+				if (!target[key]) Object.assign(target, { [key]: {} });
+				mergeDeep(target[key], source[key]);
+			} else {
+				Object.assign(target, { [key]: source[key] });
+			}
+		}
+	}
+
+	return mergeDeep(target, ...sources);
+}
