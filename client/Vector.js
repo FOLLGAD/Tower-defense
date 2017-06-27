@@ -30,7 +30,7 @@ class Vector {
 		return new Vector(this.x, this.y);
 	}
 	center(width, height) {
-		return new Vector(this.x - width / 2, this.y - width / 2);
+		return new Vector(this.x - width / 2, this.y - height / 2);
 	}
 	getHyp() {
 		return Math.hypot(this.x, this.y);

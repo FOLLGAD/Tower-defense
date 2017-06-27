@@ -1,11 +1,11 @@
 # Tower Defense
 
 ## Todo
-* Map editor
+* Buyable upgrades
+* Explosive projectiles (Bomber) [done(kindof)]
 * Map props: Cacti and trees
 * Cactus texture
+* Bomber texture [done]
+* Better enemy textures
 * Better enemy-waves
-* Buyable upgrades
-* Explosive projectiles (Bomber)
-* Enemy textures
-* Bomber texture
+* Map editor

@@ -113,7 +113,7 @@ class Vector {
 		return new Vector(this.x, this.y);
 	}
 	center(width, height) {
-		return new Vector(this.x - width / 2, this.y - width / 2);
+		return new Vector(this.x - width / 2, this.y - height / 2);
 	}
 	getHyp() {
 		return Math.hypot(this.x, this.y);
@@ -152,6 +152,9 @@ class Tower {
 
 		this.method = "first";
 
+		this.levels = {};
+		Object.keys(tower.upgrades).forEach(e => this.levels[e] = 0);
+
 		this.targetMethods = {
 			first: (enemies) => {
 				return enemies.filter(e => this.isInRange(e))
@@ -181,15 +184,19 @@ class Tower {
 			},
 		}
 	}
+	upgrade(index) {
+
+	}
 	isInRange(target) {
 		return this.pos.center(-this.width, -this.height).distanceTo(target.pos.center(-target.width, -target.height)) <= this.range;
 	}
-	fire() {
+	fire(target) {
 		let velocity = __WEBPACK_IMPORTED_MODULE_3__Vector__["a" /* default */].createFromAngle(this.rotation, this.projectile.speed);
-		window.gamesession.projectiles.push(new __WEBPACK_IMPORTED_MODULE_1__Projectile__["a" /* default */]({
+		window.gamesession.projectiles.push(new this.projectile.class({
 			pos: this.pos.center(-this.width, -this.height),
 			vel: velocity,
 			type: this.projectile,
+			target: target.pos.center(-target.width, -target.height),
 		}));
 		this.cooldown += 5000 / this.speed;
 	}
@@ -199,12 +206,19 @@ class Tower {
 	}
 	draw(ctx) {
 		let center = this.pos.center(-this.width, -this.height);
-		ctx.save();
-		ctx.translate(center.x, center.y);
-		ctx.rotate(this.rotation);
-		ctx.translate(-center.x, -center.y);
+
+		if (this.rotateImage) {
+			ctx.save();
+			ctx.translate(center.x, center.y);
+			ctx.rotate(this.rotation);
+			ctx.translate(-center.x, -center.y);
+		}
+
 		ctx.drawImage(this.image, this.pos.x, this.pos.y, this.width, this.height);
-		ctx.restore();
+
+		if (this.rotateImage) {
+			ctx.restore();
+		}
 	}
 	update(enemies) {
 		this.cooldown -= 1000 / 60;
@@ -213,7 +227,7 @@ class Tower {
 		if (target) {
 			this.turnTo(target);
 			if (this.cooldown <= 0) {
-				this.fire();
+				this.fire(target);
 			}
 		} else if (this.cooldown < 0) {
 			this.cooldown = 0;
@@ -223,66 +237,74 @@ class Tower {
 
 Tower.Types = {
 	Cannon: {
-		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/cannon.png"),
+		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/Cannon.png"),
 		width: 64,
 		height: 64,
 		range: 100,
 		speed: 8,
 		price: 200,
+		rotateImage: true,
 		projectile: {
 			class: __WEBPACK_IMPORTED_MODULE_1__Projectile__["a" /* default */],
+			image: false,
 			damage: 25,
 			speed: 16,
 			penetration: 4,
-			radius: 5,
-			color: "#aaa",
+			radius: 10,
+			color: "#333",
 		},
-		upgrades: [
-			[{
+		upgrades: {
+			speed: [{
 				price: 75,
 				speed: 10,
 			}, {
 				price: 125,
 				speed: 12,
-			}], [{
+			}],
+			range: [{
 				price: 100,
 				range: 125,
 			}, {
 				price: 125,
 				range: 150,
 			}]
-		],
+		},
 	},
 	Peashooter: {
-		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/peashooter.png"),
+		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/Peashooter.png"),
 		width: 64,
 		height: 64,
 		range: 150,
 		speed: 24,
 		price: 100,
+		rotateImage: true,
 		projectile: {
 			class: __WEBPACK_IMPORTED_MODULE_1__Projectile__["a" /* default */],
+			image: false,
 			damage: 5,
 			speed: 24,
 			penetration: 1,
-			radius: 2,
+			radius: 5,
 			color: "#70b53f",
 		},
 		upgrades: [],
 	},
 	Bomber: {
-		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/cannon.png"),
+		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/Bomber.png"),
 		width: 64,
 		height: 64,
 		range: 120,
 		speed: 3,
 		price: 500,
+		rotateImage: false,
 		projectile: {
 			class: __WEBPACK_IMPORTED_MODULE_2__Explosive__["a" /* default */],
-			damage: 100,
+			image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/other/Bomb.png"),
+			blastRadius: 100,
+			damage: 50,
 			speed: 8,
 			penetration: 6,
-			radius: 8,
+			radius: 16,
 			color: "#292d25",
 		},
 		upgrades: [],
@@ -302,6 +324,7 @@ class Projectile {
 		this.vel = vel;
 		Object.assign(this, type);
 		this.hitlist = [];
+		this.checkCollision = true;
 	}
 	update() {
 		this.pos.moveVector(this.vel);
@@ -324,6 +347,8 @@ class Projectile {
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Game__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Enemy__ = __webpack_require__(6);
+
 
 
 function NewGame() {
@@ -331,6 +356,14 @@ function NewGame() {
 	window.gamesession.startAnimation();
 	window.gamesession.togglePlay();
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+	document.getElementsByClassName("spawn-enemies")[0].addEventListener("click", function (e) {
+		if (e.target.classList.contains("spawn-enemy")) {
+			window.gamesession.enemies.push(new __WEBPACK_IMPORTED_MODULE_1__Enemy__["a" /* default */]({ type: e.target.value }))
+		}
+	})
+});
 
 document.addEventListener("DOMContentLoaded", NewGame);
 
@@ -430,9 +463,9 @@ function addN(iterations, classFunction) {
 class Game {
 	constructor() {
 		let __game = this;
-		this.mousepos = new __WEBPACK_IMPORTED_MODULE_1__Vector__["a" /* default */](0, 0);
+		this.mousepos = new __WEBPACK_IMPORTED_MODULE_1__Vector__["a" /* default */](null, null);
 		this.canvas = document.createElement("canvas");
-		this.canvas.imageSmoothingEnabled = false;
+		// this.canvas.imageSmoothingEnabled = false;
 		let gamediv = document.getElementById("game")
 		gamediv.appendChild(this.canvas);
 		this.ctx = this.canvas.getContext("2d");
@@ -534,7 +567,7 @@ class Game {
 			playPause.appendChild(imgpl);
 			menu.appendChild(playPause);
 			playPause.addEventListener("click", () => {
-				this.togglePlay();
+				__game.togglePlay();
 			});
 
 			let towermenu = document.createElement("div");
@@ -556,7 +589,7 @@ class Game {
 				item.className = "tower";
 
 				towermenu.appendChild(item);
-				item.addEventListener("click", function (e) {
+				item.addEventListener("click", function () {
 					if (this.classList.contains("active")) this.classList.remove("active");
 					else {
 						let elem = document.querySelector(".tower.active");
@@ -640,11 +673,9 @@ class Game {
 		}
 	}
 	checkEnemyCollisions() {
-		let projln = this.projectiles.length;
-		let enemln = this.enemies.length;
-
-		for (let i = 0; i < this.projectiles.length; i++) {
-			let proj = this.projectiles[i];
+		let projectiles = this.projectiles.filter(proj => proj.checkCollision === true);
+		for (let i = 0; i < projectiles.length; i++) {
+			let proj = projectiles[i];
 
 			for (let o = 0; o < this.enemies.length; o++) {
 				let enemy = this.enemies[o];
@@ -669,6 +700,21 @@ class Game {
 			}
 		}
 	}
+	detonate(explosive) {
+		let enemies = this.enemies;
+		let blast = { pos: explosive.pos, radius: explosive.blastRadius };
+		for (let i = 0; i < enemies.length; i++) {
+			let enemy = enemies[i];
+			if (isCircleRectColliding(blast, enemy)) {
+				enemy.health -= explosive.damage;
+				if (enemy.health <= 0) {
+					enemies.splice(enemies.indexOf(enemy), 1);
+					i = i - 1;
+				}
+			}
+		}
+		this.projectiles.splice(explosive);
+	}
 	displayTower(tower) {
 		this.towerDisplay.selectedTower = tower;
 		let td = this.towerDisplay.elem;
@@ -678,6 +724,9 @@ class Game {
 		btn.className = "upgrade-btn";
 		tower.upgrades.forEach(upg => {
 			let upgradeButton = btn.cloneNode();
+			upgradeButton.addEventListener("click", function () {
+				tower.upgrade(upg);
+			});
 		})
 	}
 	drawTowerRange(pos, range, highlight) {
@@ -806,7 +855,6 @@ class Game {
 
 		this.world.draw(ctx);
 		this.enemies.forEach(enemy => enemy.draw(ctx));
-		this.projectiles.forEach(proj => proj.draw(ctx));
 		if (this.selectedTower != null && !this.hideCursor) {
 			let tw = this.selectedTower;
 			let canPlace = this.canPlaceTower(new __WEBPACK_IMPORTED_MODULE_1__Vector__["a" /* default */](this.mousepos.x, this.mousepos.y).center(tw.width, tw.height), this.selectedTower);
@@ -829,6 +877,7 @@ class Game {
 			let dheight = td.canvas.height;
 			td.ctx.drawImage(canvas, sx, sy, swidth, sheight, dx, dy, dwidth, dheight);
 		}
+		this.projectiles.forEach(proj => proj.draw(ctx));
 		ctx.fillStyle = "#333"
 		ctx.font = "24px 'Segoe UI'";
 		ctx.textAlign = "left";
@@ -940,13 +989,14 @@ class Explosive extends __WEBPACK_IMPORTED_MODULE_0__Projectile__["a" /* default
 		super({ pos, vel, type });
 		Object.assign(this, type);
 		this.target = target;
+		this.checkCollision = false;
 	}
 	update() {
 		if (this.pos.distanceTo(this.target) < this.vel.getHyp()) {
-			this.pos = this.target.clone();
-			// window.gamesession.detonate(this);
+			this.pos = this.target;
+			window.gamesession.detonate(this);
 		} else {
-			this.pos.moveVector(this.vel);
+			this.pos.moveTowards(this.target, this.vel.getHyp());
 		}
 	}
 }
@@ -1035,17 +1085,19 @@ const Maps = {
 		width: 1000,
 		height: 600,
 		backgroundColor: "#fcbf49",
-		pathColor: "#003049",
+		// backgroundColor: "#f4d35e",
+		// pathColor: "#003049",
+		pathColor: "#ebebd3",
 		pathWidth: 48,
 		path: [
 			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](-50, 100),
-			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](100, 100),
+			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](120, 100),
 			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](100, 300),
 			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](400, 300),
 			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](400, 100),
-			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](250, 100),
-			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](250, 400),
-			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](600, 400),
+			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](275, 100),
+			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](275, 450),
+			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](600, 450),
 			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](600, 200),
 			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](1050, 200),
 		],

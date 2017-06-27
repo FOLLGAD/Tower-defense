@@ -5,13 +5,14 @@ class Explosive extends Projectile {
 		super({ pos, vel, type });
 		Object.assign(this, type);
 		this.target = target;
+		this.checkCollision = false;
 	}
 	update() {
 		if (this.pos.distanceTo(this.target) < this.vel.getHyp()) {
-			this.pos = this.target.clone();
-			// window.gamesession.detonate(this);
+			this.pos = this.target;
+			window.gamesession.detonate(this);
 		} else {
-			this.pos.moveVector(this.vel);
+			this.pos.moveTowards(this.target, this.vel.getHyp());
 		}
 	}
 }

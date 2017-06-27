@@ -83,9 +83,9 @@ function addN(iterations, classFunction) {
 class Game {
 	constructor() {
 		let __game = this;
-		this.mousepos = new Vector(0, 0);
+		this.mousepos = new Vector(null, null);
 		this.canvas = document.createElement("canvas");
-		this.canvas.imageSmoothingEnabled = false;
+		// this.canvas.imageSmoothingEnabled = false;
 		let gamediv = document.getElementById("game")
 		gamediv.appendChild(this.canvas);
 		this.ctx = this.canvas.getContext("2d");
@@ -187,7 +187,7 @@ class Game {
 			playPause.appendChild(imgpl);
 			menu.appendChild(playPause);
 			playPause.addEventListener("click", () => {
-				this.togglePlay();
+				__game.togglePlay();
 			});
 
 			let towermenu = document.createElement("div");
@@ -209,7 +209,7 @@ class Game {
 				item.className = "tower";
 
 				towermenu.appendChild(item);
-				item.addEventListener("click", function (e) {
+				item.addEventListener("click", function () {
 					if (this.classList.contains("active")) this.classList.remove("active");
 					else {
 						let elem = document.querySelector(".tower.active");
@@ -293,11 +293,9 @@ class Game {
 		}
 	}
 	checkEnemyCollisions() {
-		let projln = this.projectiles.length;
-		let enemln = this.enemies.length;
-
-		for (let i = 0; i < this.projectiles.length; i++) {
-			let proj = this.projectiles[i];
+		let projectiles = this.projectiles.filter(proj => proj.checkCollision === true);
+		for (let i = 0; i < projectiles.length; i++) {
+			let proj = projectiles[i];
 
 			for (let o = 0; o < this.enemies.length; o++) {
 				let enemy = this.enemies[o];
@@ -322,6 +320,21 @@ class Game {
 			}
 		}
 	}
+	detonate(explosive) {
+		let enemies = this.enemies;
+		let blast = { pos: explosive.pos, radius: explosive.blastRadius };
+		for (let i = 0; i < enemies.length; i++) {
+			let enemy = enemies[i];
+			if (isCircleRectColliding(blast, enemy)) {
+				enemy.health -= explosive.damage;
+				if (enemy.health <= 0) {
+					enemies.splice(enemies.indexOf(enemy), 1);
+					i = i - 1;
+				}
+			}
+		}
+		this.projectiles.splice(explosive);
+	}
 	displayTower(tower) {
 		this.towerDisplay.selectedTower = tower;
 		let td = this.towerDisplay.elem;
@@ -331,6 +344,9 @@ class Game {
 		btn.className = "upgrade-btn";
 		tower.upgrades.forEach(upg => {
 			let upgradeButton = btn.cloneNode();
+			upgradeButton.addEventListener("click", function () {
+				tower.upgrade(upg);
+			});
 		})
 	}
 	drawTowerRange(pos, range, highlight) {
@@ -459,7 +475,6 @@ class Game {
 
 		this.world.draw(ctx);
 		this.enemies.forEach(enemy => enemy.draw(ctx));
-		this.projectiles.forEach(proj => proj.draw(ctx));
 		if (this.selectedTower != null && !this.hideCursor) {
 			let tw = this.selectedTower;
 			let canPlace = this.canPlaceTower(new Vector(this.mousepos.x, this.mousepos.y).center(tw.width, tw.height), this.selectedTower);
@@ -482,6 +497,7 @@ class Game {
 			let dheight = td.canvas.height;
 			td.ctx.drawImage(canvas, sx, sy, swidth, sheight, dx, dy, dwidth, dheight);
 		}
+		this.projectiles.forEach(proj => proj.draw(ctx));
 		ctx.fillStyle = "#333"
 		ctx.font = "24px 'Segoe UI'";
 		ctx.textAlign = "left";

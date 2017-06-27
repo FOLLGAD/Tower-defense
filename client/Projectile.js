@@ -4,6 +4,7 @@ class Projectile {
 		this.vel = vel;
 		Object.assign(this, type);
 		this.hitlist = [];
+		this.checkCollision = true;
 	}
 	update() {
 		this.pos.moveVector(this.vel);

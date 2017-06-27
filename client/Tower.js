@@ -13,6 +13,9 @@ class Tower {
 
 		this.method = "first";
 
+		this.levels = {};
+		Object.keys(tower.upgrades).forEach(e => this.levels[e] = 0);
+
 		this.targetMethods = {
 			first: (enemies) => {
 				return enemies.filter(e => this.isInRange(e))
@@ -42,15 +45,19 @@ class Tower {
 			},
 		}
 	}
+	upgrade(index) {
+
+	}
 	isInRange(target) {
 		return this.pos.center(-this.width, -this.height).distanceTo(target.pos.center(-target.width, -target.height)) <= this.range;
 	}
-	fire() {
+	fire(target) {
 		let velocity = Vector.createFromAngle(this.rotation, this.projectile.speed);
-		window.gamesession.projectiles.push(new Projectile({
+		window.gamesession.projectiles.push(new this.projectile.class({
 			pos: this.pos.center(-this.width, -this.height),
 			vel: velocity,
 			type: this.projectile,
+			target: target.pos.center(-target.width, -target.height),
 		}));
 		this.cooldown += 5000 / this.speed;
 	}
@@ -60,12 +67,19 @@ class Tower {
 	}
 	draw(ctx) {
 		let center = this.pos.center(-this.width, -this.height);
-		ctx.save();
-		ctx.translate(center.x, center.y);
-		ctx.rotate(this.rotation);
-		ctx.translate(-center.x, -center.y);
+
+		if (this.rotateImage) {
+			ctx.save();
+			ctx.translate(center.x, center.y);
+			ctx.rotate(this.rotation);
+			ctx.translate(-center.x, -center.y);
+		}
+
 		ctx.drawImage(this.image, this.pos.x, this.pos.y, this.width, this.height);
-		ctx.restore();
+
+		if (this.rotateImage) {
+			ctx.restore();
+		}
 	}
 	update(enemies) {
 		this.cooldown -= 1000 / 60;
@@ -74,7 +88,7 @@ class Tower {
 		if (target) {
 			this.turnTo(target);
 			if (this.cooldown <= 0) {
-				this.fire();
+				this.fire(target);
 			}
 		} else if (this.cooldown < 0) {
 			this.cooldown = 0;
@@ -84,66 +98,74 @@ class Tower {
 
 Tower.Types = {
 	Cannon: {
-		image: NewImage("./resources/towers/cannon.png"),
+		image: NewImage("./resources/towers/Cannon.png"),
 		width: 64,
 		height: 64,
 		range: 100,
 		speed: 8,
 		price: 200,
+		rotateImage: true,
 		projectile: {
 			class: Projectile,
+			image: false,
 			damage: 25,
 			speed: 16,
 			penetration: 4,
-			radius: 5,
-			color: "#aaa",
+			radius: 10,
+			color: "#333",
 		},
-		upgrades: [
-			[{
+		upgrades: {
+			speed: [{
 				price: 75,
 				speed: 10,
 			}, {
 				price: 125,
 				speed: 12,
-			}], [{
+			}],
+			range: [{
 				price: 100,
 				range: 125,
 			}, {
 				price: 125,
 				range: 150,
 			}]
-		],
+		},
 	},
 	Peashooter: {
-		image: NewImage("./resources/towers/peashooter.png"),
+		image: NewImage("./resources/towers/Peashooter.png"),
 		width: 64,
 		height: 64,
 		range: 150,
 		speed: 24,
 		price: 100,
+		rotateImage: true,
 		projectile: {
 			class: Projectile,
+			image: false,
 			damage: 5,
 			speed: 24,
 			penetration: 1,
-			radius: 2,
+			radius: 5,
 			color: "#70b53f",
 		},
 		upgrades: [],
 	},
 	Bomber: {
-		image: NewImage("./resources/towers/cannon.png"),
+		image: NewImage("./resources/towers/Bomber.png"),
 		width: 64,
 		height: 64,
 		range: 120,
 		speed: 3,
 		price: 500,
+		rotateImage: false,
 		projectile: {
 			class: Explosive,
-			damage: 100,
+			image: NewImage("./resources/other/Bomb.png"),
+			blastRadius: 100,
+			damage: 50,
 			speed: 8,
 			penetration: 6,
-			radius: 8,
+			radius: 16,
 			color: "#292d25",
 		},
 		upgrades: [],
