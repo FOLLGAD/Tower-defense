@@ -526,12 +526,8 @@ class Game {
 	}
 }
 
-<<<<<<< HEAD:client/game.js
 function capFirstLetter(string) {
 	return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 export default Game;
-=======
-export default Game;
->>>>>>> 1ab534d0cb3a9e3fdd641b79b274d6b8cb3c2074:client/Game.js
