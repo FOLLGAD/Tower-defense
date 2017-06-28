@@ -153,7 +153,6 @@ class Enemy {
 		this.pathIndex = 1;
 		this.alive = true;
 		this.pos = window.gamesession.world.path[0].center(this.width, this.height);
-		this.goal = window.gamesession.world.path[this.pathIndex].center(this.width, this.height);
 		this.distanceWalked = 0;
 		this.won = false;
 	}
@@ -512,11 +511,11 @@ document.addEventListener("DOMContentLoaded", NewGame);
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Enemy__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Vector__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Tower__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Player__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__World__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Vector__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Tower__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Player__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__World__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Waves__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__Animation__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__NewImage__ = __webpack_require__(0);
 
@@ -531,34 +530,6 @@ let UI = {
 	fastForward: __WEBPACK_IMPORTED_MODULE_6__NewImage__["a" /* default */]("./resources/ui/fast-forward.png"),
 	play: __WEBPACK_IMPORTED_MODULE_6__NewImage__["a" /* default */]("./resources/ui/play.png"),
 	pause: __WEBPACK_IMPORTED_MODULE_6__NewImage__["a" /* default */]("./resources/ui/pause.png")
-}
-
-function getWave(wavenr) {
-	let queue = [];
-
-	if (wavenr >= 0) {
-		let batch = {
-			enemies: addN(10 * wavenr, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */]),
-			interval: 1000,
-			delay: 10000,
-		}
-		queue.push(batch);
-	}
-	if (wavenr >= 5) {
-		queue.push({
-			enemies: addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Goblin" }).concat(addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Ogre" })),
-			interval: 500,
-			delay: 2500,
-		})
-		queue.push({
-			enemies: addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Goblin" }).concat(addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Ogre" })),
-			interval: 500,
-			delay: 2500,
-		});
-	}
-	if (wavenr > 10) {
-	}
-	return queue;
 }
 
 function isCircleRectColliding(circle, rect) {
@@ -584,28 +555,10 @@ function isCircleRectColliding(circle, rect) {
 	return (dx * dx + dy * dy <= (circle.radius * circle.radius));
 }
 
-/*	Queue Object:
- *		enemies: []Enemy
- *			which enemies to spawn
- *		interval: Number
- *			ms to wait between each enemy. defaults to 250ms
- *		delay: Number
-*			ms to wait until next batch. defaults to 1000ms
- */
-function addN(iterations, classFunction) {
-	let restArgs = Array.prototype.slice.call(arguments, 3);
-	if (restArgs.length == 0) restArgs = [{}];
-	let array = [];
-	for (let i = 0; i < iterations; i++) {
-		array.push(new classFunction(...restArgs));
-	}
-	return array;
-}
-
 class Game {
 	constructor() {
 		let __game = this;
-		this.mousepos = new __WEBPACK_IMPORTED_MODULE_1__Vector__["a" /* default */](null, null);
+		this.mousepos = new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](null, null);
 		this.canvas = document.createElement("canvas");
 		// this.canvas.imageSmoothingEnabled = false;
 		let gamediv = document.getElementById("game")
@@ -715,8 +668,8 @@ class Game {
 			let towermenu = document.createElement("div");
 			towermenu.className = "tower-menu";
 			menu.appendChild(towermenu);
-			Object.keys(__WEBPACK_IMPORTED_MODULE_2__Tower__["a" /* default */].Types).forEach(towername => {
-				let tower = __WEBPACK_IMPORTED_MODULE_2__Tower__["a" /* default */].Types[towername];
+			Object.keys(__WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* default */].Types).forEach(towername => {
+				let tower = __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* default */].Types[towername];
 
 				let item = document.createElement("div");
 				towermenu.appendChild(item);
@@ -738,10 +691,10 @@ class Game {
 						if (elem) elem.classList.remove("active");
 						this.classList.add("active");
 					}
-					if (__game.selectedTower == __WEBPACK_IMPORTED_MODULE_2__Tower__["a" /* default */].Types[towername]) {
+					if (__game.selectedTower == __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* default */].Types[towername]) {
 						__game.deselectBuyTower();
 					} else {
-						__game.selectedTower = __WEBPACK_IMPORTED_MODULE_2__Tower__["a" /* default */].Types[towername];
+						__game.selectedTower = __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* default */].Types[towername];
 					}
 				})
 			});
@@ -749,9 +702,9 @@ class Game {
 
 		this.enemies = [];
 		this.animations = [];
-		this.players = [new __WEBPACK_IMPORTED_MODULE_3__Player__["a" /* default */]({})];
+		this.players = [new __WEBPACK_IMPORTED_MODULE_2__Player__["a" /* default */]({})];
 		this.projectiles = [];
-		this.world = new __WEBPACK_IMPORTED_MODULE_4__World__["a" /* default */]({});
+		this.world = new __WEBPACK_IMPORTED_MODULE_3__World__["a" /* default */]({});
 		this.lives = 20;
 		this.canvas.height = this.world.height;
 		this.canvas.width = this.world.width;
@@ -773,7 +726,7 @@ class Game {
 			} else {
 				// Place new tower
 				let { width, height } = this.selectedTower;
-				let vector = new __WEBPACK_IMPORTED_MODULE_1__Vector__["a" /* default */](e.clientX - width / 2, e.clientY - height / 2),
+				let vector = new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](e.clientX - width / 2, e.clientY - height / 2),
 					tower = this.selectedTower;
 				if (this.canPlaceTower(vector, tower) && player.buyTower({ vector, tower })) {
 					this.deselectBuyTower();
@@ -831,9 +784,7 @@ class Game {
 					this.animations.push(new __WEBPACK_IMPORTED_MODULE_5__Animation__["a" /* Damage */]({ pos: enemy.pos.center(-enemy.width, -enemy.height) }));
 
 					if (enemy.health <= 0) {
-						enemy.die();
-						this.players[0].money += enemy.drop;
-						this.enemies.splice(this.enemies.indexOf(enemy), 1);
+						this.killEnemy(enemy);
 						o -= 1;
 					} else {
 						proj.hitlist.push(enemy);
@@ -846,6 +797,12 @@ class Game {
 			}
 		}
 	}
+	killEnemy(enemy) {
+		let enemies = this.enemies;
+		this.players[0].money += enemy.drop;
+		enemy.die();
+		enemies.splice(enemies.indexOf(enemy), 1);
+	}
 	detonate(explosive) {
 		let enemies = this.enemies;
 		let blast = { pos: explosive.pos, radius: explosive.blastRadius };
@@ -855,7 +812,7 @@ class Game {
 			if (isCircleRectColliding(blast, enemy)) {
 				enemy.health -= explosive.damage;
 				if (enemy.health <= 0) {
-					enemies.splice(enemies.indexOf(enemy), 1);
+					this.killEnemy(enemy);
 					i = i - 1;
 				}
 			}
@@ -900,7 +857,7 @@ class Game {
 	}
 	nextWave() {
 		let nr = ++this.wave.number;
-		this.wave.queue = getWave(nr);
+		this.wave.queue = __WEBPACK_IMPORTED_MODULE_4__Waves__["a" /* GetWave */](nr);
 		let menu = document.getElementById("menu");
 		menu.querySelector(".play").style.display = "none";
 		menu.querySelector(".fast-forward").style.display = null;
@@ -1023,9 +980,9 @@ class Game {
 		this.enemies.forEach(enemy => enemy.draw(ctx));
 		if (this.selectedTower != null && !this.hideCursor) {
 			let tw = this.selectedTower;
-			let canPlace = this.canPlaceTower(new __WEBPACK_IMPORTED_MODULE_1__Vector__["a" /* default */](this.mousepos.x, this.mousepos.y).center(tw.width, tw.height), this.selectedTower);
+			let canPlace = this.canPlaceTower(new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](this.mousepos.x, this.mousepos.y).center(tw.width, tw.height), this.selectedTower);
 
-			this.drawTowerRange(new __WEBPACK_IMPORTED_MODULE_1__Vector__["a" /* default */](this.mousepos.x, this.mousepos.y), tw.range, !canPlace);
+			this.drawTowerRange(new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](this.mousepos.x, this.mousepos.y), tw.range, !canPlace);
 			ctx.drawImage(tw.image, this.mousepos.x - tw.width / 2, this.mousepos.y - tw.height / 2, tw.width, tw.height);
 		}
 		if (td.selectedTower) {
@@ -1283,21 +1240,6 @@ class Damage extends Animation {
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = Damage;
 
-
-// export class Explosion extends Animation {
-// 	constructor({ pos, radius }) {
-// 		let vel = 6;
-// 		let duration = radius / vel;
-// 		super({ pos, duration });
-// 		this.particles = [];
-// 		this.frameCount = 0;
-
-// 		let particleNum = ((Math.random() * 5) | 0) + 50;
-// 		for (let i = 0; i < particleNum; i++) {
-// 			this.particles.push(new Particle({ color: "#555", pos: pos.clone(), vel: Vector.createFromAngle(Math.random() * Math.PI * 2, vel) }));
-// 		}
-// 	}
-// }
 
 class Explosion extends Animation {
 	constructor({ pos, radius }) {
@@ -3313,6 +3255,62 @@ module.exports = function (fromModel) {
 };
 
 
+
+/***/ }),
+/* 20 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = GetWave;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Enemy__ = __webpack_require__(2);
+
+
+/*	Queue Object:
+ *		enemies: []Enemy
+ *			which enemies to spawn
+ *		interval: Number
+ *			ms to wait between each enemy. defaults to 250ms
+ *		delay: Number
+ *			ms to wait until next batch. defaults to 1000ms
+ */
+
+function GetWave(wavenr) {
+	let queue = [];
+
+	if (wavenr >= 0) {
+		let batch = {
+			enemies: addN(10 * wavenr, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */]),
+			interval: 1000,
+			delay: 10000,
+		}
+		queue.push(batch);
+	}
+	if (wavenr >= 5) {
+		queue.push({
+			enemies: addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Goblin" }).concat(addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Ogre" })),
+			interval: 500,
+			delay: 2500,
+		})
+		queue.push({
+			enemies: addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Goblin" }).concat(addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Ogre" })),
+			interval: 500,
+			delay: 2500,
+		});
+	}
+	if (wavenr > 10) {
+	}
+	return queue;
+}
+
+function addN(iterations, classFunction) {
+	let restArgs = Array.prototype.slice.call(arguments, 3);
+	if (restArgs.length == 0) restArgs = [{}];
+	let array = [];
+	for (let i = 0; i < iterations; i++) {
+		array.push(new classFunction(...restArgs));
+	}
+	return array;
+}
 
 /***/ })
 /******/ ]);

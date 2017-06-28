@@ -12,7 +12,6 @@ class Enemy {
 		this.pathIndex = 1;
 		this.alive = true;
 		this.pos = window.gamesession.world.path[0].center(this.width, this.height);
-		this.goal = window.gamesession.world.path[this.pathIndex].center(this.width, this.height);
 		this.distanceWalked = 0;
 		this.won = false;
 	}

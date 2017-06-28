@@ -1,8 +1,8 @@
-import Enemy from "./Enemy";
 import Vector from "./Vector";
 import Tower from "./Tower";
 import Player from "./Player";
 import World from "./World";
+import { GetWave } from "./Waves";
 import { Damage, Explosion } from "./Animation";
 import NewImage from "./NewImage";
 
@@ -10,34 +10,6 @@ let UI = {
 	fastForward: NewImage("./resources/ui/fast-forward.png"),
 	play: NewImage("./resources/ui/play.png"),
 	pause: NewImage("./resources/ui/pause.png")
-}
-
-function getWave(wavenr) {
-	let queue = [];
-
-	if (wavenr >= 0) {
-		let batch = {
-			enemies: addN(10 * wavenr, Enemy),
-			interval: 1000,
-			delay: 10000,
-		}
-		queue.push(batch);
-	}
-	if (wavenr >= 5) {
-		queue.push({
-			enemies: addN(15, Enemy, { type: "Goblin" }).concat(addN(15, Enemy, { type: "Ogre" })),
-			interval: 500,
-			delay: 2500,
-		})
-		queue.push({
-			enemies: addN(15, Enemy, { type: "Goblin" }).concat(addN(15, Enemy, { type: "Ogre" })),
-			interval: 500,
-			delay: 2500,
-		});
-	}
-	if (wavenr > 10) {
-	}
-	return queue;
 }
 
 function isCircleRectColliding(circle, rect) {
@@ -61,24 +33,6 @@ function isCircleRectColliding(circle, rect) {
 	var dx = distX - rect.width / 2;
 	var dy = distY - rect.height / 2;
 	return (dx * dx + dy * dy <= (circle.radius * circle.radius));
-}
-
-/*	Queue Object:
- *		enemies: []Enemy
- *			which enemies to spawn
- *		interval: Number
- *			ms to wait between each enemy. defaults to 250ms
- *		delay: Number
-*			ms to wait until next batch. defaults to 1000ms
- */
-function addN(iterations, classFunction) {
-	let restArgs = Array.prototype.slice.call(arguments, 3);
-	if (restArgs.length == 0) restArgs = [{}];
-	let array = [];
-	for (let i = 0; i < iterations; i++) {
-		array.push(new classFunction(...restArgs));
-	}
-	return array;
 }
 
 class Game {
@@ -310,9 +264,7 @@ class Game {
 					this.animations.push(new Damage({ pos: enemy.pos.center(-enemy.width, -enemy.height) }));
 
 					if (enemy.health <= 0) {
-						enemy.die();
-						this.players[0].money += enemy.drop;
-						this.enemies.splice(this.enemies.indexOf(enemy), 1);
+						this.killEnemy(enemy);
 						o -= 1;
 					} else {
 						proj.hitlist.push(enemy);
@@ -325,6 +277,12 @@ class Game {
 			}
 		}
 	}
+	killEnemy(enemy) {
+		let enemies = this.enemies;
+		this.players[0].money += enemy.drop;
+		enemy.die();
+		enemies.splice(enemies.indexOf(enemy), 1);
+	}
 	detonate(explosive) {
 		let enemies = this.enemies;
 		let blast = { pos: explosive.pos, radius: explosive.blastRadius };
@@ -334,7 +292,7 @@ class Game {
 			if (isCircleRectColliding(blast, enemy)) {
 				enemy.health -= explosive.damage;
 				if (enemy.health <= 0) {
-					enemies.splice(enemies.indexOf(enemy), 1);
+					this.killEnemy(enemy);
 					i = i - 1;
 				}
 			}
@@ -379,7 +337,7 @@ class Game {
 	}
 	nextWave() {
 		let nr = ++this.wave.number;
-		this.wave.queue = getWave(nr);
+		this.wave.queue = GetWave(nr);
 		let menu = document.getElementById("menu");
 		menu.querySelector(".play").style.display = "none";
 		menu.querySelector(".fast-forward").style.display = null;

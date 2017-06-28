@@ -69,21 +69,6 @@ export class Damage extends Animation {
 	}
 }
 
-// export class Explosion extends Animation {
-// 	constructor({ pos, radius }) {
-// 		let vel = 6;
-// 		let duration = radius / vel;
-// 		super({ pos, duration });
-// 		this.particles = [];
-// 		this.frameCount = 0;
-
-// 		let particleNum = ((Math.random() * 5) | 0) + 50;
-// 		for (let i = 0; i < particleNum; i++) {
-// 			this.particles.push(new Particle({ color: "#555", pos: pos.clone(), vel: Vector.createFromAngle(Math.random() * Math.PI * 2, vel) }));
-// 		}
-// 	}
-// }
-
 export class Explosion extends Animation {
 	constructor({ pos, radius }) {
 		super({ pos });
