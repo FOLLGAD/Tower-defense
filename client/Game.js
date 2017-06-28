@@ -3,6 +3,7 @@ import Vector from "./Vector";
 import Tower from "./Tower";
 import Player from "./Player";
 import World from "./World";
+import { Damage } from "./Animation";
 import NewImage from "./NewImage";
 
 let UI = {
@@ -226,6 +227,7 @@ class Game {
 		})();
 
 		this.enemies = [];
+		this.animations = [];
 		this.players = [new Player({})];
 		this.projectiles = [];
 		this.world = new World({});
@@ -304,6 +306,9 @@ class Game {
 				if (colliding && proj.hitlist.indexOf(enemy) === -1) {
 					enemy.health -= proj.damage;
 					proj.penetration -= enemy.armor;
+
+					this.animations.push(new Damage({ pos: enemy.pos.center(-enemy.width, -enemy.height) }));
+
 					if (enemy.health <= 0) {
 						enemy.die();
 						this.players[0].money += enemy.drop;
@@ -461,6 +466,9 @@ class Game {
 	}
 	update() {
 		if (!this.play) return;
+		this.animations.forEach(anim => {
+			anim.update();
+		})
 		this.projectiles.forEach(proj => {
 			proj.update();
 			if (this.world.isOutOfBounds(proj.pos)) {
@@ -513,6 +521,9 @@ class Game {
 			let dheight = td.canvas.height;
 			td.ctx.drawImage(canvas, sx, sy, swidth, sheight, dx, dy, dwidth, dheight);
 		}
+		this.animations.forEach(anim => {
+			anim.draw(ctx);
+		})
 		this.projectiles.forEach(proj => proj.draw(ctx));
 		ctx.fillStyle = "#333"
 		ctx.font = "24px 'Segoe UI'";

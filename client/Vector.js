@@ -14,6 +14,11 @@ class Vector {
 		this.y += vector.y;
 		return this;
 	}
+	add(vector) {
+		this.x += vector.x;
+		this.y += vector.y;
+		return this;
+	}
 	moveTowards(vector, distance) {
 		return this.moveAngle(this.getAngleTo(vector), distance);
 	}

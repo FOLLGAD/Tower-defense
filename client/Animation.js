@@ -1,15 +1,76 @@
-import NewImage from "./NewImage";
+import Vector from "./Vector";
+import Color from "color";
 
-let Images = {
-	Explosion: NewImage("")
-}
+// let Images = {
+// 	Explosion: NewImage("")
+// }
 
-class Animation {
-	constructor({ duration }) {
+/**
+ * Animation class for animations
+ */
+export class Animation {
+	constructor({ duration, pos }) {
 		this.startTime = Date.now();
 		this.duration = duration;
-
+		this.pos = pos;
 	}
 }
 
-export default Animation;
+/**
+ * Particle class
+ * @param {number} width
+ * @param {Vector} vel
+ * @param {Vector} pos
+ */
+
+class Particle {
+	constructor({ width = 8, height = 8, color, vel, pos }) {
+		this.width = width;
+		this.height = height;
+		this.color = color;
+		this.vel = vel;
+		this.pos = pos;
+	}
+	draw(ctx, opacity) {
+		ctx.fillStyle = Color(this.color).alpha(opacity);
+		ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+	}
+	update() {
+		this.pos.add(this.vel);
+	}
+}
+
+window.standardDuration = 15;
+
+export class Damage extends Animation {
+	constructor({ pos, duration = window.standardDuration }) {
+		super({ pos, duration });
+		this.particles = [];
+		this.frameCount = 0;
+
+		let particleNum = ((Math.random() * 5) | 0) + 5;
+		for (let i = 0; i < particleNum; i++) {
+			this.particles.push(new Particle({ color: "#d62f2f", pos: this.pos.clone(), vel: Vector.createFromAngle(Math.random() * Math.PI * 2, Math.random() + 1) }));
+		}
+	}
+	update() {
+		this.frameCount++;
+		if (this.frameCount > this.duration) {
+			let anims = window.gamesession.animations;
+			anims.splice(anims.indexOf(this), 1);
+			return;
+		}
+		this.particles.forEach(particle => {
+			particle.update();
+		})
+	}
+	draw(ctx) {
+		this.particles.forEach(particle => {
+			particle.draw(ctx, 1 - this.frameCount / this.duration);
+		})
+	}
+}
+
+export class Explosion extends Animation {
+
+}
