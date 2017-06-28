@@ -159,10 +159,10 @@ class Enemy {
 	}
 	draw(ctx) {
 		ctx.drawImage(this.image, this.pos.x, this.pos.y, this.width, this.height);
-		ctx.fillStyle = "#888888";
-		ctx.fillRect(this.pos.x, this.pos.y + this.height + 5, this.width, 5);
+		// ctx.fillStyle = "#888888";
+		// ctx.fillRect(this.pos.x, this.pos.y - 3, this.width, 2);
 		ctx.fillStyle = "#bb2233";
-		ctx.fillRect(this.pos.x, this.pos.y + this.height + 5, this.width * (this.health / Enemy.Types[this.type].health), 5);
+		ctx.fillRect(this.pos.x, this.pos.y - 4, this.width * (this.health / Enemy.Types[this.type].health), 3);
 	}
 	die() {
 		this.alive = false;
@@ -849,6 +849,7 @@ class Game {
 	detonate(explosive) {
 		let enemies = this.enemies;
 		let blast = { pos: explosive.pos, radius: explosive.blastRadius };
+		this.animations.push(new __WEBPACK_IMPORTED_MODULE_5__Animation__["b" /* Explosion */]({ pos: explosive.pos.clone(), radius: explosive.blastRadius }))
 		for (let i = 0; i < enemies.length; i++) {
 			let enemy = enemies[i];
 			if (isCircleRectColliding(blast, enemy)) {
@@ -1224,6 +1225,22 @@ class Animation {
 		this.duration = duration;
 		this.pos = pos;
 	}
+	update() {
+		this.frameCount++;
+		if (this.frameCount > this.duration) {
+			let anims = window.gamesession.animations;
+			anims.splice(anims.indexOf(this), 1);
+			return;
+		}
+		this.particles.forEach(particle => {
+			particle.update();
+		})
+	}
+	draw(ctx) {
+		this.particles.forEach(particle => {
+			particle.draw(ctx, 1 - this.frameCount / this.duration);
+		})
+	}
 }
 /* unused harmony export Animation */
 
@@ -1252,10 +1269,8 @@ class Particle {
 	}
 }
 
-window.standardDuration = 15;
-
 class Damage extends Animation {
-	constructor({ pos, duration = window.standardDuration }) {
+	constructor({ pos, duration = 20 }) {
 		super({ pos, duration });
 		this.particles = [];
 		this.frameCount = 0;
@@ -1265,30 +1280,49 @@ class Damage extends Animation {
 			this.particles.push(new Particle({ color: "#d62f2f", pos: this.pos.clone(), vel: __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */].createFromAngle(Math.random() * Math.PI * 2, Math.random() + 1) }));
 		}
 	}
-	update() {
-		this.frameCount++;
-		if (this.frameCount > this.duration) {
-			let anims = window.gamesession.animations;
-			anims.splice(anims.indexOf(this), 1);
-			return;
-		}
-		this.particles.forEach(particle => {
-			particle.update();
-		})
-	}
-	draw(ctx) {
-		this.particles.forEach(particle => {
-			particle.draw(ctx, 1 - this.frameCount / this.duration);
-		})
-	}
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = Damage;
 
 
-class Explosion extends Animation {
+// export class Explosion extends Animation {
+// 	constructor({ pos, radius }) {
+// 		let vel = 6;
+// 		let duration = radius / vel;
+// 		super({ pos, duration });
+// 		this.particles = [];
+// 		this.frameCount = 0;
 
+// 		let particleNum = ((Math.random() * 5) | 0) + 50;
+// 		for (let i = 0; i < particleNum; i++) {
+// 			this.particles.push(new Particle({ color: "#555", pos: pos.clone(), vel: Vector.createFromAngle(Math.random() * Math.PI * 2, vel) }));
+// 		}
+// 	}
+// }
+
+class Explosion extends Animation {
+	constructor({ pos, radius }) {
+		super({ pos });
+		this.vel = 8;
+		this.radius = radius;
+		this.currentRadius = 0;
+	}
+	draw(ctx) {
+		ctx.beginPath();
+		ctx.arc(this.pos.x, this.pos.y, this.currentRadius, 0, Math.PI * 2);
+		ctx.strokeStyle = __WEBPACK_IMPORTED_MODULE_1_color___default.a.rgb(120, 120, 120).alpha(1 - this.currentRadius / this.radius);
+		ctx.lineWidth = 25;
+		ctx.stroke();
+		ctx.closePath();
+	}
+	update() {
+		this.currentRadius += this.vel;
+		if (this.currentRadius > this.radius) {
+			let anims = window.gamesession.animations;
+			anims.splice(anims.indexOf(this), 1);
+		}
+	}
 }
-/* unused harmony export Explosion */
+/* harmony export (immutable) */ __webpack_exports__["b"] = Explosion;
 
 
 /***/ }),

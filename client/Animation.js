@@ -14,6 +14,22 @@ export class Animation {
 		this.duration = duration;
 		this.pos = pos;
 	}
+	update() {
+		this.frameCount++;
+		if (this.frameCount > this.duration) {
+			let anims = window.gamesession.animations;
+			anims.splice(anims.indexOf(this), 1);
+			return;
+		}
+		this.particles.forEach(particle => {
+			particle.update();
+		})
+	}
+	draw(ctx) {
+		this.particles.forEach(particle => {
+			particle.draw(ctx, 1 - this.frameCount / this.duration);
+		})
+	}
 }
 
 /**
@@ -40,10 +56,8 @@ class Particle {
 	}
 }
 
-window.standardDuration = 15;
-
 export class Damage extends Animation {
-	constructor({ pos, duration = window.standardDuration }) {
+	constructor({ pos, duration = 20 }) {
 		super({ pos, duration });
 		this.particles = [];
 		this.frameCount = 0;
@@ -53,24 +67,43 @@ export class Damage extends Animation {
 			this.particles.push(new Particle({ color: "#d62f2f", pos: this.pos.clone(), vel: Vector.createFromAngle(Math.random() * Math.PI * 2, Math.random() + 1) }));
 		}
 	}
-	update() {
-		this.frameCount++;
-		if (this.frameCount > this.duration) {
-			let anims = window.gamesession.animations;
-			anims.splice(anims.indexOf(this), 1);
-			return;
-		}
-		this.particles.forEach(particle => {
-			particle.update();
-		})
-	}
-	draw(ctx) {
-		this.particles.forEach(particle => {
-			particle.draw(ctx, 1 - this.frameCount / this.duration);
-		})
-	}
 }
 
-export class Explosion extends Animation {
+// export class Explosion extends Animation {
+// 	constructor({ pos, radius }) {
+// 		let vel = 6;
+// 		let duration = radius / vel;
+// 		super({ pos, duration });
+// 		this.particles = [];
+// 		this.frameCount = 0;
 
+// 		let particleNum = ((Math.random() * 5) | 0) + 50;
+// 		for (let i = 0; i < particleNum; i++) {
+// 			this.particles.push(new Particle({ color: "#555", pos: pos.clone(), vel: Vector.createFromAngle(Math.random() * Math.PI * 2, vel) }));
+// 		}
+// 	}
+// }
+
+export class Explosion extends Animation {
+	constructor({ pos, radius }) {
+		super({ pos });
+		this.vel = 8;
+		this.radius = radius;
+		this.currentRadius = 0;
+	}
+	draw(ctx) {
+		ctx.beginPath();
+		ctx.arc(this.pos.x, this.pos.y, this.currentRadius, 0, Math.PI * 2);
+		ctx.strokeStyle = Color.rgb(120, 120, 120).alpha(1 - this.currentRadius / this.radius);
+		ctx.lineWidth = 25;
+		ctx.stroke();
+		ctx.closePath();
+	}
+	update() {
+		this.currentRadius += this.vel;
+		if (this.currentRadius > this.radius) {
+			let anims = window.gamesession.animations;
+			anims.splice(anims.indexOf(this), 1);
+		}
+	}
 }

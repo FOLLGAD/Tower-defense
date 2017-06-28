@@ -3,7 +3,7 @@ import Vector from "./Vector";
 import Tower from "./Tower";
 import Player from "./Player";
 import World from "./World";
-import { Damage } from "./Animation";
+import { Damage, Explosion } from "./Animation";
 import NewImage from "./NewImage";
 
 let UI = {
@@ -328,6 +328,7 @@ class Game {
 	detonate(explosive) {
 		let enemies = this.enemies;
 		let blast = { pos: explosive.pos, radius: explosive.blastRadius };
+		this.animations.push(new Explosion({ pos: explosive.pos.clone(), radius: explosive.blastRadius }))
 		for (let i = 0; i < enemies.length; i++) {
 			let enemy = enemies[i];
 			if (isCircleRectColliding(blast, enemy)) {

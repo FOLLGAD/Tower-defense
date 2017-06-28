@@ -18,10 +18,10 @@ class Enemy {
 	}
 	draw(ctx) {
 		ctx.drawImage(this.image, this.pos.x, this.pos.y, this.width, this.height);
-		ctx.fillStyle = "#888888";
-		ctx.fillRect(this.pos.x, this.pos.y + this.height + 5, this.width, 5);
+		// ctx.fillStyle = "#888888";
+		// ctx.fillRect(this.pos.x, this.pos.y - 3, this.width, 2);
 		ctx.fillStyle = "#bb2233";
-		ctx.fillRect(this.pos.x, this.pos.y + this.height + 5, this.width * (this.health / Enemy.Types[this.type].health), 5);
+		ctx.fillRect(this.pos.x, this.pos.y - 4, this.width * (this.health / Enemy.Types[this.type].health), 3);
 	}
 	die() {
 		this.alive = false;
