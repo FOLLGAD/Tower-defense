@@ -1,5 +1,5 @@
 import Vector from "./Vector";
-import Tower from "./Tower";
+import { Towers } from "./Tower";
 import Player from "./Player";
 import World from "./World";
 import { GetWave } from "./Waves";
@@ -148,8 +148,8 @@ class Game {
 			let towermenu = document.createElement("div");
 			towermenu.className = "tower-menu";
 			menu.appendChild(towermenu);
-			Object.keys(Tower.Types).forEach(towername => {
-				let tower = Tower.Types[towername];
+			Object.keys(Towers).forEach(towername => {
+				let tower = Towers[towername];
 
 				let item = document.createElement("div");
 				towermenu.appendChild(item);
@@ -159,7 +159,7 @@ class Game {
 				item.appendChild(image);
 				let pricetext = document.createElement("span");
 				pricetext.className = "price";
-				pricetext.innerHTML = `$${tower.price}`;
+				pricetext.innerHTML = `${tower.price}c`;
 				item.appendChild(pricetext);
 				item.className = "tower";
 
@@ -171,10 +171,10 @@ class Game {
 						if (elem) elem.classList.remove("active");
 						this.classList.add("active");
 					}
-					if (__game.selectedTower == Tower.Types[towername]) {
+					if (__game.selectedTower == Towers[towername]) {
 						__game.deselectBuyTower();
 					} else {
-						__game.selectedTower = Tower.Types[towername];
+						__game.selectedTower = Towers[towername];
 					}
 				})
 			});
@@ -258,13 +258,11 @@ class Game {
 
 				let colliding = isCircleRectColliding(proj, enemy);
 				if (colliding && proj.hitlist.indexOf(enemy) === -1) {
-					enemy.health -= proj.damage;
 					proj.penetration -= enemy.armor;
 
 					this.animations.push(new Damage({ pos: enemy.pos.center(-enemy.width, -enemy.height) }));
 
-					if (enemy.health <= 0) {
-						this.killEnemy(enemy);
+					if (enemy.hurt(proj.damage)) {
 						o -= 1;
 					} else {
 						proj.hitlist.push(enemy);
@@ -277,12 +275,6 @@ class Game {
 			}
 		}
 	}
-	killEnemy(enemy) {
-		let enemies = this.enemies;
-		this.players[0].money += enemy.drop;
-		enemy.die();
-		enemies.splice(enemies.indexOf(enemy), 1);
-	}
 	detonate(explosive) {
 		let enemies = this.enemies;
 		let blast = { pos: explosive.pos, radius: explosive.blastRadius };
@@ -290,9 +282,7 @@ class Game {
 		for (let i = 0; i < enemies.length; i++) {
 			let enemy = enemies[i];
 			if (isCircleRectColliding(blast, enemy)) {
-				enemy.health -= explosive.damage;
-				if (enemy.health <= 0) {
-					this.killEnemy(enemy);
+				if (enemy.hurt(explosive.damage)) {
 					i = i - 1;
 				}
 			}
@@ -497,7 +487,7 @@ class Game {
 }
 
 function capFirstLetter(string) {
-	return string.charAt(0).toUpperCase() + string.slice(1);
+	return string.replace("-", " ").charAt(0).toUpperCase() + string.slice(1);
 }
 
 export default Game;

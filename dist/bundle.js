@@ -163,6 +163,18 @@ class Enemy {
 		ctx.fillStyle = "#bb2233";
 		ctx.fillRect(this.pos.x, this.pos.y - 4, this.width * (this.health / Enemy.Types[this.type].health), 3);
 	}
+	hurt(damage) {
+		this.health -= damage;
+		if (this.health <= 0) {
+			console.log("dead")
+			let enemies = window.gamesession.enemies;
+			window.gamesession.players[0].money += this.drop;
+			this.die();
+			enemies.splice(enemies.indexOf(this), 1);
+			return true;
+		}
+		return false;
+	}
 	die() {
 		this.alive = false;
 	}
@@ -221,27 +233,26 @@ Enemy.Types = {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Towers; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__NewImage__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Projectile__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Explosive__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Vector__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__LightningBolt__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Vector__ = __webpack_require__(1);
+
 
 
 
 
 
 class Tower {
-	constructor({ vector, tower = Tower.Types.Cannon }) {
+	constructor({ vector }) {
 		this.pos = vector;
 		this.rotation = 0;
 		this.cooldown = 0;
-
-		Object.assign(this, tower);
-
 		this.method = "first";
 
 		this.levels = {};
-		Object.keys(tower.upgrades).forEach(e => this.levels[e] = 0);
 
 		this.targetMethods = {
 			first: (enemies) => {
@@ -272,21 +283,18 @@ class Tower {
 			},
 		}
 	}
-	upgrade(upgradeName) {
-		this.levels[upgradeName] += 1;
-		let level = this.levels[upgradeName];
-		let upgrade = this.upgrades[upgradeName][level - 1];
-		mergeDeep(this, upgrade);
-	}
 	isInRange(target) {
 		return this.pos.center(-this.width, -this.height).distanceTo(target.pos.center(-target.width, -target.height)) <= this.range;
 	}
 	fire(target) {
-		let velocity = __WEBPACK_IMPORTED_MODULE_3__Vector__["a" /* default */].createFromAngle(this.rotation, this.projectile.speed);
+		let velocity = __WEBPACK_IMPORTED_MODULE_4__Vector__["a" /* default */].createFromAngle(this.rotation, this.projectile.speed);
 		window.gamesession.projectiles.push(new this.projectile.class({
 			pos: this.pos.center(-this.width, -this.height),
 			vel: velocity,
-			type: this.projectile,
+			damage: this.projectile.damage,
+			radius: this.projectile.radius,
+			penetration: this.projectile.penetration,
+			color: this.projectile.color,
 			target: target.pos.center(-target.width, -target.height),
 		}));
 		this.cooldown += 5000 / this.speed;
@@ -295,21 +303,21 @@ class Tower {
 		this.rotation = this.pos.center(-this.width, -this.height).getAngleTo(target.pos.center(-target.width, -target.height));
 		return this;
 	}
+	upgrade(upgradeName) {
+		this.levels[upgradeName] += 1;
+		let level = this.levels[upgradeName];
+		let upgrade = this.upgrades[upgradeName][level - 1];
+		mergeDeep(this, upgrade);
+	}
 	draw(ctx) {
 		let center = this.pos.center(-this.width, -this.height);
 
-		if (this.rotateImage) {
-			ctx.save();
-			ctx.translate(center.x, center.y);
-			ctx.rotate(this.rotation);
-			ctx.translate(-center.x, -center.y);
-		}
-
+		ctx.save();
+		ctx.translate(center.x, center.y);
+		ctx.rotate(this.rotation);
+		ctx.translate(-center.x, -center.y);
 		ctx.drawImage(this.image, this.pos.x, this.pos.y, this.width, this.height);
-
-		if (this.rotateImage) {
-			ctx.restore();
-		}
+		ctx.restore();
 	}
 	update(enemies) {
 		this.cooldown -= 1000 / 60;
@@ -326,16 +334,16 @@ class Tower {
 	}
 }
 
-Tower.Types = {
-	Cannon: {
-		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/Cannon.png"),
-		width: 64,
-		height: 64,
-		range: 100,
-		speed: 8,
-		price: 200,
-		rotateImage: true,
-		projectile: {
+class Cannon extends Tower {
+	constructor({ vector }) {
+		super({ vector });
+
+		this.image = __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/Cannon.png");
+		this.width = 64;
+		this.height = 64;
+		this.range = 100;
+		this.speed = 8;
+		this.projectile = {
 			class: __WEBPACK_IMPORTED_MODULE_1__Projectile__["a" /* default */],
 			image: false,
 			damage: 25,
@@ -343,8 +351,8 @@ Tower.Types = {
 			penetration: 4,
 			radius: 10,
 			color: "#333",
-		},
-		upgrades: {
+		};
+		this.upgrades = {
 			speed: [{
 				price: 75,
 				speed: 10,
@@ -359,17 +367,23 @@ Tower.Types = {
 				price: 125,
 				range: 150,
 			}]
-		},
-	},
-	Peashooter: {
-		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/Peashooter.png"),
-		width: 64,
-		height: 64,
-		range: 150,
-		speed: 24,
-		price: 100,
-		rotateImage: true,
-		projectile: {
+		}
+		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
+	}
+}
+/* unused harmony export Cannon */
+
+
+class Peashooter extends Tower {
+	constructor({ vector }) {
+		super({ vector });
+
+		this.image = __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/Peashooter.png");
+		this.width = 64;
+		this.height = 64;
+		this.range = 150;
+		this.speed = 24;
+		this.projectile = {
 			class: __WEBPACK_IMPORTED_MODULE_1__Projectile__["a" /* default */],
 			image: false,
 			damage: 5,
@@ -377,8 +391,8 @@ Tower.Types = {
 			penetration: 1,
 			radius: 5,
 			color: "#70b53f",
-		},
-		upgrades: {
+		};
+		this.upgrades = {
 			damage: [{
 				price: 50,
 				projectile: {
@@ -390,35 +404,125 @@ Tower.Types = {
 					damage: 10
 				}
 			}],
-		},
-	},
-	Bomber: {
-		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/Bomber.png"),
-		width: 64,
-		height: 64,
-		range: 120,
-		speed: 3,
-		price: 500,
-		rotateImage: false,
-		projectile: {
+		}
+		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
+	}
+}
+/* unused harmony export Peashooter */
+
+
+class Bomber extends Tower {
+	constructor({ vector }) {
+		super({ vector });
+
+		this.image = __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/Bomber.png");
+		this.width = 64;
+		this.height = 64;
+		this.range = 120;
+		this.speed = 3;
+		this.projectile = {
 			class: __WEBPACK_IMPORTED_MODULE_2__Explosive__["a" /* default */],
-			image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/other/Bomb.png"),
-			blastRadius: 100,
 			damage: 50,
-			speed: 8,
-			penetration: 6,
-			radius: 16,
+			penetration: null,
 			color: "#292d25",
-		},
-		upgrades: {
+			radius: 16,
+			speed: 8,
+		};
+		this.upgrades = {
 			damage: [{
 				price: 50
 			}],
-		},
+		}
+		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
+	}
+	draw(ctx) {
+		ctx.drawImage(this.image, this.pos.x, this.pos.y, this.width, this.height);
+	}
+	fire(target) {
+		let velocity = __WEBPACK_IMPORTED_MODULE_4__Vector__["a" /* default */].createFromAngle(this.rotation, this.projectile.speed);
+		window.gamesession.projectiles.push(new this.projectile.class({
+			pos: this.pos.center(-this.width, -this.height),
+			vel: velocity,
+			target: target.pos.center(-target.width, -target.height),
+		}));
+		this.cooldown += 5000 / this.speed;
 	}
 }
+/* unused harmony export Bomber */
 
-/* harmony default export */ __webpack_exports__["a"] = (Tower);
+
+class TeslaCoil extends Tower {
+	constructor({ vector }) {
+		super({ vector });
+
+		this.image = __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/TeslaCoil.png");
+		this.width = 64;
+		this.height = 64;
+		this.range = 120;
+		this.speed = 3;
+		this.projectile = {
+			class: __WEBPACK_IMPORTED_MODULE_3__LightningBolt__["a" /* default */],
+			damage: 25,
+			speed: 100,
+			penetration: 1,
+			radius: 16,
+			color: "#7DF9FF",
+		};
+		this.upgrades = {
+			damage: [{
+				price: 50
+			}],
+		}
+		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
+	}
+	draw(ctx) {
+		ctx.drawImage(this.image, this.pos.x, this.pos.y, this.width, this.height);
+	}
+	fire(target) {
+		window.gamesession.projectiles.push(new __WEBPACK_IMPORTED_MODULE_3__LightningBolt__["a" /* default */]({
+			target,
+			pos: this.pos.center(-this.width, -this.height)
+		}));
+		this.cooldown += 5000 / this.speed;
+	}
+}
+/* unused harmony export TeslaCoil */
+
+
+let Towers = {
+	Cannon: {
+		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/Cannon.png"),
+		price: 200,
+		width: 64,
+		height: 64,
+		range: 100,
+		type: Cannon
+	},
+	Peashooter: {
+		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/Peashooter.png"),
+		price: 100,
+		width: 64,
+		height: 64,
+		range: 150,
+		type: Peashooter
+	},
+	Bomber: {
+		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/Bomber.png"),
+		price: 500,
+		width: 64,
+		height: 64,
+		range: 120,
+		type: Bomber
+	},
+	TeslaCoil: {
+		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/TeslaCoil.png"),
+		price: 500,
+		width: 64,
+		height: 64,
+		range: 120,
+		type: TeslaCoil
+	}
+}
 
 /**
  * Simple object check.
@@ -458,12 +562,15 @@ function mergeDeep(target, ...sources) {
 
 "use strict";
 class Projectile {
-	constructor({ pos, vel, type }) {
+	constructor({ pos, damage, vel, radius, color, penetration }) {
 		this.pos = pos;
 		this.vel = vel;
-		Object.assign(this, type);
-		this.hitlist = [];
+		this.radius = radius;
+		this.damage = damage;
 		this.checkCollision = true;
+		this.color = color;
+		this.hitlist = [];
+		this.penetration = penetration;
 	}
 	update() {
 		this.pos.moveVector(this.vel);
@@ -668,8 +775,8 @@ class Game {
 			let towermenu = document.createElement("div");
 			towermenu.className = "tower-menu";
 			menu.appendChild(towermenu);
-			Object.keys(__WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* default */].Types).forEach(towername => {
-				let tower = __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* default */].Types[towername];
+			Object.keys(__WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* Towers */]).forEach(towername => {
+				let tower = __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* Towers */][towername];
 
 				let item = document.createElement("div");
 				towermenu.appendChild(item);
@@ -679,7 +786,7 @@ class Game {
 				item.appendChild(image);
 				let pricetext = document.createElement("span");
 				pricetext.className = "price";
-				pricetext.innerHTML = `$${tower.price}`;
+				pricetext.innerHTML = `${tower.price}c`;
 				item.appendChild(pricetext);
 				item.className = "tower";
 
@@ -691,10 +798,10 @@ class Game {
 						if (elem) elem.classList.remove("active");
 						this.classList.add("active");
 					}
-					if (__game.selectedTower == __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* default */].Types[towername]) {
+					if (__game.selectedTower == __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* Towers */][towername]) {
 						__game.deselectBuyTower();
 					} else {
-						__game.selectedTower = __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* default */].Types[towername];
+						__game.selectedTower = __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* Towers */][towername];
 					}
 				})
 			});
@@ -778,13 +885,11 @@ class Game {
 
 				let colliding = isCircleRectColliding(proj, enemy);
 				if (colliding && proj.hitlist.indexOf(enemy) === -1) {
-					enemy.health -= proj.damage;
 					proj.penetration -= enemy.armor;
 
 					this.animations.push(new __WEBPACK_IMPORTED_MODULE_5__Animation__["a" /* Damage */]({ pos: enemy.pos.center(-enemy.width, -enemy.height) }));
 
-					if (enemy.health <= 0) {
-						this.killEnemy(enemy);
+					if (enemy.hurt(proj.damage)) {
 						o -= 1;
 					} else {
 						proj.hitlist.push(enemy);
@@ -797,12 +902,6 @@ class Game {
 			}
 		}
 	}
-	killEnemy(enemy) {
-		let enemies = this.enemies;
-		this.players[0].money += enemy.drop;
-		enemy.die();
-		enemies.splice(enemies.indexOf(enemy), 1);
-	}
 	detonate(explosive) {
 		let enemies = this.enemies;
 		let blast = { pos: explosive.pos, radius: explosive.blastRadius };
@@ -810,9 +909,7 @@ class Game {
 		for (let i = 0; i < enemies.length; i++) {
 			let enemy = enemies[i];
 			if (isCircleRectColliding(blast, enemy)) {
-				enemy.health -= explosive.damage;
-				if (enemy.health <= 0) {
-					this.killEnemy(enemy);
+				if (enemy.hurt(explosive.damage)) {
 					i = i - 1;
 				}
 			}
@@ -1017,7 +1114,7 @@ class Game {
 }
 
 function capFirstLetter(string) {
-	return string.charAt(0).toUpperCase() + string.slice(1);
+	return string.replace("-", " ").charAt(0).toUpperCase() + string.slice(1);
 }
 
 /* harmony default export */ __webpack_exports__["a"] = (Game);
@@ -1027,15 +1124,25 @@ function capFirstLetter(string) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Projectile__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__NewImage__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Projectile__ = __webpack_require__(4);
 
 
-class Explosive extends __WEBPACK_IMPORTED_MODULE_0__Projectile__["a" /* default */] {
-	constructor({ target, pos, vel, type }) {
-		super({ pos, vel, type });
-		Object.assign(this, type);
-		this.target = target;
+
+class Explosive extends __WEBPACK_IMPORTED_MODULE_1__Projectile__["a" /* default */] {
+	constructor(args) {
+		super(args);
+		let { target } = args;
 		this.checkCollision = false;
+		this.target = target;
+
+		this.image = __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/other/Bomb.png");
+		this.blastRadius = 100;
+		this.damage = 50;
+		this.speed = 8;
+		this.penetration = null;
+		this.radius = 16;
+		this.color = "#70b53f";
 	}
 	update() {
 		if (this.pos.distanceTo(this.target) < this.vel.getHyp()) {
@@ -1063,11 +1170,11 @@ class Player {
 		this.towers = [];
 		this.money = 300;
 	}
-	buyTower({ vector, tower = __WEBPACK_IMPORTED_MODULE_0__Tower__["a" /* default */].Types.Cannon }) {
+	buyTower({ vector, tower }) {
 		let towercost = tower.price;
 		if (this.money - towercost >= 0) {
 			this.money = this.money - towercost;
-			this.towers.push(new __WEBPACK_IMPORTED_MODULE_0__Tower__["a" /* default */]({ vector, tower }));
+			this.towers.push(new tower.type({ vector }));
 			return true;
 		}
 		return false;
@@ -3311,6 +3418,71 @@ function addN(iterations, classFunction) {
 	}
 	return array;
 }
+
+/***/ }),
+/* 21 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Projectile__ = __webpack_require__(4);
+
+
+class LightningBolt extends __WEBPACK_IMPORTED_MODULE_0__Projectile__["a" /* default */] {
+	constructor({ pos, target, upgrades }) {
+		super({ pos });
+		this.checkCollision = false;
+		this.color = "#7DF9FF";
+		this.damage = 3;
+		this.speed = 100;
+		this.penetration = 3;
+		Object.assign(this, upgrades);
+		this.range = 120;
+
+		this.duration = 30;
+		this.frameCount = 0;
+
+		this.targets = [target];
+		for (let i = 0; i < this.penetration; i++) {
+			let p = this.targets[this.targets.length - 1].pos || this.pos;
+			let enemies = window.gamesession.enemies
+				.filter(e => {
+					return (e.pos.center(-e.width, -e.height).distanceTo(p) <= this.range) && this.targets.indexOf(e) === -1;
+				})
+				.sort((a, b) => a.pos.center(-a.width, -a.height).distanceTo(p) > b.pos.center(-b.width, -b.height).distanceTo(p));
+			let target = enemies[0];
+			if (target) this.targets.push(target);
+		}
+	}
+	update() {
+		this.frameCount++;
+		console.log(this.targets.length)
+		if (this.frameCount < this.duration) {
+			this.targets.forEach(e => {
+				console.log("hurt")
+				if (e.hurt(this.damage)) {
+					this.targets.splice(this.targets.indexOf(e), 1);
+				}
+			});
+		} else {
+			let projectiles = window.gamesession.projectiles;
+			projectiles.splice(projectiles.indexOf(this), 1);
+		}
+	}
+	draw(ctx) {
+		ctx.strokeStyle = this.color;
+		ctx.lineWidth = 5;
+		ctx.beginPath();
+		ctx.moveTo(this.pos.x, this.pos.y);
+		this.targets.forEach(target => {
+			let pos = target.pos.center(-target.width, -target.height);
+			ctx.lineTo(pos.x, pos.y);
+		});
+		ctx.stroke();
+		ctx.closePath();
+	}
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (LightningBolt);
 
 /***/ })
 /******/ ]);

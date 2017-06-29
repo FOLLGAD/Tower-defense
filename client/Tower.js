@@ -1,20 +1,17 @@
 import NewImage from "./NewImage";
 import Projectile from "./Projectile";
 import Explosive from "./Explosive";
+import LightningBolt from "./LightningBolt";
 import Vector from "./Vector";
 
 class Tower {
-	constructor({ vector, tower = Tower.Types.Cannon }) {
+	constructor({ vector }) {
 		this.pos = vector;
 		this.rotation = 0;
 		this.cooldown = 0;
-
-		Object.assign(this, tower);
-
 		this.method = "first";
 
 		this.levels = {};
-		Object.keys(tower.upgrades).forEach(e => this.levels[e] = 0);
 
 		this.targetMethods = {
 			first: (enemies) => {
@@ -45,12 +42,6 @@ class Tower {
 			},
 		}
 	}
-	upgrade(upgradeName) {
-		this.levels[upgradeName] += 1;
-		let level = this.levels[upgradeName];
-		let upgrade = this.upgrades[upgradeName][level - 1];
-		mergeDeep(this, upgrade);
-	}
 	isInRange(target) {
 		return this.pos.center(-this.width, -this.height).distanceTo(target.pos.center(-target.width, -target.height)) <= this.range;
 	}
@@ -59,7 +50,10 @@ class Tower {
 		window.gamesession.projectiles.push(new this.projectile.class({
 			pos: this.pos.center(-this.width, -this.height),
 			vel: velocity,
-			type: this.projectile,
+			damage: this.projectile.damage,
+			radius: this.projectile.radius,
+			penetration: this.projectile.penetration,
+			color: this.projectile.color,
 			target: target.pos.center(-target.width, -target.height),
 		}));
 		this.cooldown += 5000 / this.speed;
@@ -68,21 +62,21 @@ class Tower {
 		this.rotation = this.pos.center(-this.width, -this.height).getAngleTo(target.pos.center(-target.width, -target.height));
 		return this;
 	}
+	upgrade(upgradeName) {
+		this.levels[upgradeName] += 1;
+		let level = this.levels[upgradeName];
+		let upgrade = this.upgrades[upgradeName][level - 1];
+		mergeDeep(this, upgrade);
+	}
 	draw(ctx) {
 		let center = this.pos.center(-this.width, -this.height);
 
-		if (this.rotateImage) {
-			ctx.save();
-			ctx.translate(center.x, center.y);
-			ctx.rotate(this.rotation);
-			ctx.translate(-center.x, -center.y);
-		}
-
+		ctx.save();
+		ctx.translate(center.x, center.y);
+		ctx.rotate(this.rotation);
+		ctx.translate(-center.x, -center.y);
 		ctx.drawImage(this.image, this.pos.x, this.pos.y, this.width, this.height);
-
-		if (this.rotateImage) {
-			ctx.restore();
-		}
+		ctx.restore();
 	}
 	update(enemies) {
 		this.cooldown -= 1000 / 60;
@@ -99,16 +93,16 @@ class Tower {
 	}
 }
 
-Tower.Types = {
-	Cannon: {
-		image: NewImage("./resources/towers/Cannon.png"),
-		width: 64,
-		height: 64,
-		range: 100,
-		speed: 8,
-		price: 200,
-		rotateImage: true,
-		projectile: {
+export class Cannon extends Tower {
+	constructor({ vector }) {
+		super({ vector });
+
+		this.image = NewImage("./resources/towers/Cannon.png");
+		this.width = 64;
+		this.height = 64;
+		this.range = 100;
+		this.speed = 8;
+		this.projectile = {
 			class: Projectile,
 			image: false,
 			damage: 25,
@@ -116,8 +110,8 @@ Tower.Types = {
 			penetration: 4,
 			radius: 10,
 			color: "#333",
-		},
-		upgrades: {
+		};
+		this.upgrades = {
 			speed: [{
 				price: 75,
 				speed: 10,
@@ -132,17 +126,21 @@ Tower.Types = {
 				price: 125,
 				range: 150,
 			}]
-		},
-	},
-	Peashooter: {
-		image: NewImage("./resources/towers/Peashooter.png"),
-		width: 64,
-		height: 64,
-		range: 150,
-		speed: 24,
-		price: 100,
-		rotateImage: true,
-		projectile: {
+		}
+		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
+	}
+}
+
+export class Peashooter extends Tower {
+	constructor({ vector }) {
+		super({ vector });
+
+		this.image = NewImage("./resources/towers/Peashooter.png");
+		this.width = 64;
+		this.height = 64;
+		this.range = 150;
+		this.speed = 24;
+		this.projectile = {
 			class: Projectile,
 			image: false,
 			damage: 5,
@@ -150,8 +148,8 @@ Tower.Types = {
 			penetration: 1,
 			radius: 5,
 			color: "#70b53f",
-		},
-		upgrades: {
+		};
+		this.upgrades = {
 			damage: [{
 				price: 50,
 				projectile: {
@@ -163,35 +161,119 @@ Tower.Types = {
 					damage: 10
 				}
 			}],
-		},
-	},
-	Bomber: {
-		image: NewImage("./resources/towers/Bomber.png"),
-		width: 64,
-		height: 64,
-		range: 120,
-		speed: 3,
-		price: 500,
-		rotateImage: false,
-		projectile: {
-			class: Explosive,
-			image: NewImage("./resources/other/Bomb.png"),
-			blastRadius: 100,
-			damage: 50,
-			speed: 8,
-			penetration: 6,
-			radius: 16,
-			color: "#292d25",
-		},
-		upgrades: {
-			damage: [{
-				price: 50
-			}],
-		},
+		}
+		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
 	}
 }
 
-export default Tower;
+export class Bomber extends Tower {
+	constructor({ vector }) {
+		super({ vector });
+
+		this.image = NewImage("./resources/towers/Bomber.png");
+		this.width = 64;
+		this.height = 64;
+		this.range = 120;
+		this.speed = 3;
+		this.projectile = {
+			class: Explosive,
+			damage: 50,
+			penetration: null,
+			color: "#292d25",
+			radius: 16,
+			speed: 8,
+		};
+		this.upgrades = {
+			damage: [{
+				price: 50
+			}],
+		}
+		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
+	}
+	draw(ctx) {
+		ctx.drawImage(this.image, this.pos.x, this.pos.y, this.width, this.height);
+	}
+	fire(target) {
+		let velocity = Vector.createFromAngle(this.rotation, this.projectile.speed);
+		window.gamesession.projectiles.push(new this.projectile.class({
+			pos: this.pos.center(-this.width, -this.height),
+			vel: velocity,
+			target: target.pos.center(-target.width, -target.height),
+		}));
+		this.cooldown += 5000 / this.speed;
+	}
+}
+
+export class TeslaCoil extends Tower {
+	constructor({ vector }) {
+		super({ vector });
+
+		this.image = NewImage("./resources/towers/TeslaCoil.png");
+		this.width = 64;
+		this.height = 64;
+		this.range = 120;
+		this.speed = 3;
+		this.projectile = {
+			class: LightningBolt,
+			damage: 25,
+			speed: 100,
+			penetration: 1,
+			radius: 16,
+			color: "#7DF9FF",
+		};
+		this.upgrades = {
+			damage: [{
+				price: 50
+			}],
+		}
+		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
+	}
+	draw(ctx) {
+		ctx.drawImage(this.image, this.pos.x, this.pos.y, this.width, this.height);
+	}
+	fire(target) {
+		window.gamesession.projectiles.push(new LightningBolt({
+			target,
+			pos: this.pos.center(-this.width, -this.height)
+		}));
+		this.cooldown += 5000 / this.speed;
+	}
+}
+
+export let Towers = {
+	Cannon: {
+		image: NewImage("./resources/towers/Cannon.png"),
+		price: 200,
+		width: 64,
+		height: 64,
+		range: 100,
+		type: Cannon
+	},
+	Peashooter: {
+		image: NewImage("./resources/towers/Peashooter.png"),
+		price: 100,
+		width: 64,
+		height: 64,
+		range: 150,
+		type: Peashooter
+	},
+	Bomber: {
+		image: NewImage("./resources/towers/Bomber.png"),
+		price: 500,
+		width: 64,
+		height: 64,
+		range: 120,
+		type: Bomber
+	},
+	TeslaCoil: {
+		image: NewImage("./resources/towers/TeslaCoil.png"),
+		price: 500,
+		width: 64,
+		height: 64,
+		range: 120,
+		type: TeslaCoil
+	}
+}
 
 /**
  * Simple object check.

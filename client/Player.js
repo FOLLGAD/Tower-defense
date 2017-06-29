@@ -1,4 +1,4 @@
-import Tower from "./Tower";
+import { Towers } from "./Tower";
 
 class Player {
 	constructor({ name = "Player" }) {
@@ -6,11 +6,11 @@ class Player {
 		this.towers = [];
 		this.money = 300;
 	}
-	buyTower({ vector, tower = Tower.Types.Cannon }) {
+	buyTower({ vector, tower }) {
 		let towercost = tower.price;
 		if (this.money - towercost >= 0) {
 			this.money = this.money - towercost;
-			this.towers.push(new Tower({ vector, tower }));
+			this.towers.push(new tower.type({ vector }));
 			return true;
 		}
 		return false;

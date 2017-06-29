@@ -22,6 +22,18 @@ class Enemy {
 		ctx.fillStyle = "#bb2233";
 		ctx.fillRect(this.pos.x, this.pos.y - 4, this.width * (this.health / Enemy.Types[this.type].health), 3);
 	}
+	hurt(damage) {
+		this.health -= damage;
+		if (this.health <= 0) {
+			console.log("dead")
+			let enemies = window.gamesession.enemies;
+			window.gamesession.players[0].money += this.drop;
+			this.die();
+			enemies.splice(enemies.indexOf(this), 1);
+			return true;
+		}
+		return false;
+	}
 	die() {
 		this.alive = false;
 	}
