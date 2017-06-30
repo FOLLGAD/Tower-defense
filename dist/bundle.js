@@ -1144,7 +1144,7 @@ function capFirstLetter(string) {
 
 /* harmony default export */ __webpack_exports__["a"] = (Game);
 
-function checkLineCircleCollision(point1, point2, circle, radius, log) {
+function checkLineCircleCollision(point1, point2, circle, radius) {
 	let ABE = Math.atan2(point2.y - point1.y, point2.x - point1.x)
 	let DBE = Math.atan2(circle.y - point1.y, circle.x - point1.x)
 	let CBD = ABE - DBE
