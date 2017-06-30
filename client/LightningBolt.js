@@ -6,8 +6,7 @@ class LightningBolt extends Projectile {
 		let { target } = args;
 		this.checkCollision = false;
 		this.color = "#7DF9FF";
-
-		this.duration = 10;
+		
 		this.frameCount = 0;
 
 		this.targets = [target];

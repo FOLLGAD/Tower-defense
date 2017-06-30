@@ -97,7 +97,7 @@ export class Cannon extends Tower {
 		this.image = NewImage("./resources/towers/Cannon.png");
 		this.width = 64;
 		this.height = 64;
-		this.range = 100;
+		this.range = 150;
 		this.speed = 8;
 		this.projectile = {
 			class: Projectile,
@@ -117,11 +117,22 @@ export class Cannon extends Tower {
 				speed: 12,
 			}],
 			range: [{
-				price: 100,
+				price: 175,
 				range: 125,
 			}, {
 				price: 125,
-				range: 150,
+				range: 200,
+			}],
+			penetration: [{
+				price: 75,
+				projectile: {
+					penetration: 6
+				}
+			}, {
+				price: 100,
+				projectile: {
+					penetration: 8
+				}
 			}]
 		}
 		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
@@ -218,19 +229,36 @@ export class TeslaCoil extends Tower {
 		this.projectile = {
 			class: LightningBolt,
 			damage: 3,
+			duration: 20,
 			speed: 100,
 			penetration: 1,
 			radius: 16,
-			range: 150,
+			range: 100,
 			color: "#7DF9FF",
 		};
 		this.upgrades = {
 			damage: [{
-				price: 50,
+				price: 300,
 				projectile: {
 					damage: 5
 				}
+			}, {
+				price: 300,
+				projectile: {
+					damage: 7
+				}
 			}],
+			penetration: [{
+				price: 200,
+				projectile: {
+					penetration: 2
+				}
+			}, {
+				price: 200,
+				projectile: {
+					penetration: 3
+				}
+			}]
 		}
 		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
 	}
@@ -253,7 +281,7 @@ export let Towers = {
 		price: 200,
 		width: 64,
 		height: 64,
-		range: 100,
+		range: 150,
 		type: Cannon
 	},
 	Peashooter: {

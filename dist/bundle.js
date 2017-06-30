@@ -337,7 +337,7 @@ class Cannon extends Tower {
 		this.image = __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/towers/Cannon.png");
 		this.width = 64;
 		this.height = 64;
-		this.range = 100;
+		this.range = 150;
 		this.speed = 8;
 		this.projectile = {
 			class: __WEBPACK_IMPORTED_MODULE_1__Projectile__["a" /* default */],
@@ -357,11 +357,22 @@ class Cannon extends Tower {
 				speed: 12,
 			}],
 			range: [{
-				price: 100,
+				price: 175,
 				range: 125,
 			}, {
 				price: 125,
-				range: 150,
+				range: 200,
+			}],
+			penetration: [{
+				price: 75,
+				projectile: {
+					penetration: 6
+				}
+			}, {
+				price: 100,
+				projectile: {
+					penetration: 8
+				}
 			}]
 		}
 		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
@@ -464,19 +475,36 @@ class TeslaCoil extends Tower {
 		this.projectile = {
 			class: __WEBPACK_IMPORTED_MODULE_3__LightningBolt__["a" /* default */],
 			damage: 3,
+			duration: 20,
 			speed: 100,
 			penetration: 1,
 			radius: 16,
-			range: 150,
+			range: 100,
 			color: "#7DF9FF",
 		};
 		this.upgrades = {
 			damage: [{
-				price: 50,
+				price: 300,
 				projectile: {
 					damage: 5
 				}
+			}, {
+				price: 300,
+				projectile: {
+					damage: 7
+				}
 			}],
+			penetration: [{
+				price: 200,
+				projectile: {
+					penetration: 2
+				}
+			}, {
+				price: 200,
+				projectile: {
+					penetration: 3
+				}
+			}]
 		}
 		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
 	}
@@ -501,7 +529,7 @@ let Towers = {
 		price: 200,
 		width: 64,
 		height: 64,
-		range: 100,
+		range: 150,
 		type: Cannon
 	},
 	Peashooter: {
@@ -1004,45 +1032,6 @@ class Game {
 			let enem = this.wave.queue[0].enemies.shift();
 			this.enemies.push(enem);
 		}
-	}
-	canPlaceTowerRect(vector, tower) {
-		let { width, height } = tower;
-		let player = this.players[0];
-		if (player.towers.some(tower => {
-			if (vector.x + width > tower.pos.x && vector.x < tower.pos.x + tower.width &&
-				vector.y + height > tower.pos.y && vector.y < tower.pos.y + tower.height) {
-				return true;
-			}
-			return false;
-		})) {
-			return false;
-		} else {
-			for (let i = 0; i < this.world.path.length - 1; i++) {
-				let p = this.world.path[i];
-				let np = this.world.path[i + 1];
-				let lw = this.world.pathWidth / 2;
-				let x, y, wid, hei;
-				if (p.x < np.x) {
-					x = p.x - lw;
-					wid = np.x - p.x + lw * 2;
-				} else {
-					x = np.x - lw;
-					wid = p.x - np.x + lw * 2;
-				}
-				if (p.y < np.y) {
-					y = p.y - lw;
-					hei = np.y - p.y + lw * 2;
-				} else {
-					y = np.y - lw;
-					hei = p.y - np.y + lw * 2;
-				}
-				if (vector.x < x + wid && vector.x + width > x &&
-					vector.y < y + hei && vector.y + height > y) {
-					return false;
-				}
-			}
-		}
-		return true;
 	}
 	canPlaceTower(vector, tower) {
 		let radius = tower.width / 2 * (2 / 3);
@@ -3480,8 +3469,7 @@ class LightningBolt extends __WEBPACK_IMPORTED_MODULE_0__Projectile__["a" /* def
 		let { target } = args;
 		this.checkCollision = false;
 		this.color = "#7DF9FF";
-
-		this.duration = 10;
+		
 		this.frameCount = 0;
 
 		this.targets = [target];

@@ -374,45 +374,6 @@ class Game {
 			this.enemies.push(enem);
 		}
 	}
-	canPlaceTowerRect(vector, tower) {
-		let { width, height } = tower;
-		let player = this.players[0];
-		if (player.towers.some(tower => {
-			if (vector.x + width > tower.pos.x && vector.x < tower.pos.x + tower.width &&
-				vector.y + height > tower.pos.y && vector.y < tower.pos.y + tower.height) {
-				return true;
-			}
-			return false;
-		})) {
-			return false;
-		} else {
-			for (let i = 0; i < this.world.path.length - 1; i++) {
-				let p = this.world.path[i];
-				let np = this.world.path[i + 1];
-				let lw = this.world.pathWidth / 2;
-				let x, y, wid, hei;
-				if (p.x < np.x) {
-					x = p.x - lw;
-					wid = np.x - p.x + lw * 2;
-				} else {
-					x = np.x - lw;
-					wid = p.x - np.x + lw * 2;
-				}
-				if (p.y < np.y) {
-					y = p.y - lw;
-					hei = np.y - p.y + lw * 2;
-				} else {
-					y = np.y - lw;
-					hei = p.y - np.y + lw * 2;
-				}
-				if (vector.x < x + wid && vector.x + width > x &&
-					vector.y < y + hei && vector.y + height > y) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
 	canPlaceTower(vector, tower) {
 		let radius = tower.width / 2 * (2 / 3);
 		let player = this.players[0];
