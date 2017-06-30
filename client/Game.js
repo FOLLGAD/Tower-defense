@@ -374,7 +374,7 @@ class Game {
 			this.enemies.push(enem);
 		}
 	}
-	canPlaceTower(vector, tower) {
+	canPlaceTowerRect(vector, tower) {
 		let { width, height } = tower;
 		let player = this.players[0];
 		if (player.towers.some(tower => {
@@ -409,6 +409,27 @@ class Game {
 					vector.y < y + hei && vector.y + height > y) {
 					return false;
 				}
+			}
+		}
+		return true;
+	}
+	canPlaceTower(vector, tower) {
+		let radius = tower.width / 2 * (2 / 3);
+		let player = this.players[0];
+		if (player.towers.some(tow => {
+			return tow.pos.distanceTo(vector) < radius + tow.width / 2 * (2 / 3);
+		})) {
+			return false;
+		} else {
+			for (let i = 0; i < this.world.path.length - 1; i++) {
+				let p = this.world.path[i];
+				let np = this.world.path[i + 1];
+				let lw = this.world.pathWidth / 2;
+				let radius = tower.width / 2;
+				let center = vector.center(-tower.width, -tower.height);
+				if (i == 1);
+				let bool = checkLineCircleCollision(p, np, center, radius + lw * (2 / 3), i == 1);
+				if (bool) return false;
 			}
 		}
 		return true;
@@ -491,3 +512,35 @@ function capFirstLetter(string) {
 }
 
 export default Game;
+
+function checkLineCircleCollision(point1, point2, circle, radius, log) {
+	let ABE = Math.atan2(point2.y - point1.y, point2.x - point1.x)
+	let DBE = Math.atan2(circle.y - point1.y, circle.x - point1.x)
+	let CBD = ABE - DBE
+	let BD = Math.sin(CBD) * Math.hypot(circle.y - point1.y, circle.x - point1.x)
+
+
+	if (radius > Math.abs(BD)) {
+		let minX, minY, width, height;
+
+		if (point1.x < point2.x) {
+			minX = point1.x;
+			width = point2.x - minX;
+		} else {
+			minX = point2.x;
+			width = point1.x - minX;
+		}
+		if (point1.y < point2.y) {
+			minY = point1.y;
+			height = point2.y - minY;
+		} else {
+			minY = point2.y;
+			height = point1.y - minY;
+		}
+
+		if (isCircleRectColliding({ pos: { x: circle.x, y: circle.y }, radius: radius }, { pos: { x: minX, y: minY }, width: width, height: height })) {
+			return true;
+		}
+	}
+	return false;
+}
