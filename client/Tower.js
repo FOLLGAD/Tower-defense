@@ -50,11 +50,8 @@ class Tower {
 		window.gamesession.projectiles.push(new this.projectile.class({
 			pos: this.pos.center(-this.width, -this.height),
 			vel: velocity,
-			damage: this.projectile.damage,
-			radius: this.projectile.radius,
-			penetration: this.projectile.penetration,
-			color: this.projectile.color,
-			target: target.pos.center(-target.width, -target.height),
+			stats: this.projectile,
+			target: target.pos.center(-target.width, -target.height)
 		}));
 		this.cooldown += 5000 / this.speed;
 	}
@@ -176,16 +173,20 @@ export class Bomber extends Tower {
 		this.range = 120;
 		this.speed = 3;
 		this.projectile = {
-			class: Explosive,
-			damage: 50,
-			penetration: null,
-			color: "#292d25",
-			radius: 16,
+			image: NewImage("./resources/other/Bomb.png"),
+			blastRadius: 100,
+			damage: 25,
 			speed: 8,
+			penetration: null,
+			radius: 16,
+			color: "#70b53f"
 		};
 		this.upgrades = {
 			damage: [{
-				price: 50
+				price: 50,
+				projectile: {
+					damage: 60,
+				}
 			}],
 		}
 		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
@@ -195,9 +196,10 @@ export class Bomber extends Tower {
 	}
 	fire(target) {
 		let velocity = Vector.createFromAngle(this.rotation, this.projectile.speed);
-		window.gamesession.projectiles.push(new this.projectile.class({
+		window.gamesession.projectiles.push(new Explosive({
 			pos: this.pos.center(-this.width, -this.height),
 			vel: velocity,
+			stats: this.projectile,
 			target: target.pos.center(-target.width, -target.height),
 		}));
 		this.cooldown += 5000 / this.speed;
@@ -215,15 +217,19 @@ export class TeslaCoil extends Tower {
 		this.speed = 3;
 		this.projectile = {
 			class: LightningBolt,
-			damage: 25,
+			damage: 3,
 			speed: 100,
 			penetration: 1,
 			radius: 16,
+			range: 150,
 			color: "#7DF9FF",
 		};
 		this.upgrades = {
 			damage: [{
-				price: 50
+				price: 50,
+				projectile: {
+					damage: 5
+				}
 			}],
 		}
 		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
@@ -234,6 +240,7 @@ export class TeslaCoil extends Tower {
 	fire(target) {
 		window.gamesession.projectiles.push(new LightningBolt({
 			target,
+			stats: this.projectile,
 			pos: this.pos.center(-this.width, -this.height)
 		}));
 		this.cooldown += 5000 / this.speed;

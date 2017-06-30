@@ -1,17 +1,13 @@
 import Projectile from "./Projectile";
 
 class LightningBolt extends Projectile {
-	constructor({ pos, target, upgrades }) {
-		super({ pos });
+	constructor(args) {
+		super(args);
+		let { target } = args;
 		this.checkCollision = false;
 		this.color = "#7DF9FF";
-		this.damage = 3;
-		this.speed = 100;
-		this.penetration = 3;
-		Object.assign(this, upgrades);
-		this.range = 120;
 
-		this.duration = 30;
+		this.duration = 10;
 		this.frameCount = 0;
 
 		this.targets = [target];
@@ -28,10 +24,8 @@ class LightningBolt extends Projectile {
 	}
 	update() {
 		this.frameCount++;
-		console.log(this.targets.length)
 		if (this.frameCount < this.duration) {
 			this.targets.forEach(e => {
-				console.log("hurt")
 				if (e.hurt(this.damage)) {
 					this.targets.splice(this.targets.indexOf(e), 1);
 				}

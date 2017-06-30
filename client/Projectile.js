@@ -1,13 +1,11 @@
 class Projectile {
-	constructor({ pos, damage, vel, radius, color, penetration }) {
+	constructor({ pos, vel, stats }) {
 		this.pos = pos;
 		this.vel = vel;
-		this.radius = radius;
-		this.damage = damage;
 		this.checkCollision = true;
-		this.color = color;
 		this.hitlist = [];
-		this.penetration = penetration;
+
+		Object.assign(this, stats);
 	}
 	update() {
 		this.pos.moveVector(this.vel);

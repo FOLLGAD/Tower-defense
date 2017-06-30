@@ -25,7 +25,6 @@ class Enemy {
 	hurt(damage) {
 		this.health -= damage;
 		if (this.health <= 0) {
-			console.log("dead")
 			let enemies = window.gamesession.enemies;
 			window.gamesession.players[0].money += this.drop;
 			this.die();
