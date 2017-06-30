@@ -166,7 +166,6 @@ class Enemy {
 	hurt(damage) {
 		this.health -= damage;
 		if (this.health <= 0) {
-			console.log("dead")
 			let enemies = window.gamesession.enemies;
 			window.gamesession.players[0].money += this.drop;
 			this.die();
@@ -291,11 +290,8 @@ class Tower {
 		window.gamesession.projectiles.push(new this.projectile.class({
 			pos: this.pos.center(-this.width, -this.height),
 			vel: velocity,
-			damage: this.projectile.damage,
-			radius: this.projectile.radius,
-			penetration: this.projectile.penetration,
-			color: this.projectile.color,
-			target: target.pos.center(-target.width, -target.height),
+			stats: this.projectile,
+			target: target.pos.center(-target.width, -target.height)
 		}));
 		this.cooldown += 5000 / this.speed;
 	}
@@ -421,16 +417,20 @@ class Bomber extends Tower {
 		this.range = 120;
 		this.speed = 3;
 		this.projectile = {
-			class: __WEBPACK_IMPORTED_MODULE_2__Explosive__["a" /* default */],
-			damage: 50,
-			penetration: null,
-			color: "#292d25",
-			radius: 16,
+			image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/other/Bomb.png"),
+			blastRadius: 100,
+			damage: 25,
 			speed: 8,
+			penetration: null,
+			radius: 16,
+			color: "#70b53f"
 		};
 		this.upgrades = {
 			damage: [{
-				price: 50
+				price: 50,
+				projectile: {
+					damage: 60,
+				}
 			}],
 		}
 		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
@@ -440,9 +440,10 @@ class Bomber extends Tower {
 	}
 	fire(target) {
 		let velocity = __WEBPACK_IMPORTED_MODULE_4__Vector__["a" /* default */].createFromAngle(this.rotation, this.projectile.speed);
-		window.gamesession.projectiles.push(new this.projectile.class({
+		window.gamesession.projectiles.push(new __WEBPACK_IMPORTED_MODULE_2__Explosive__["a" /* default */]({
 			pos: this.pos.center(-this.width, -this.height),
 			vel: velocity,
+			stats: this.projectile,
 			target: target.pos.center(-target.width, -target.height),
 		}));
 		this.cooldown += 5000 / this.speed;
@@ -462,15 +463,19 @@ class TeslaCoil extends Tower {
 		this.speed = 3;
 		this.projectile = {
 			class: __WEBPACK_IMPORTED_MODULE_3__LightningBolt__["a" /* default */],
-			damage: 25,
+			damage: 3,
 			speed: 100,
 			penetration: 1,
 			radius: 16,
+			range: 150,
 			color: "#7DF9FF",
 		};
 		this.upgrades = {
 			damage: [{
-				price: 50
+				price: 50,
+				projectile: {
+					damage: 5
+				}
 			}],
 		}
 		Object.keys(this.upgrades).forEach(e => this.levels[e] = 0);
@@ -481,6 +486,7 @@ class TeslaCoil extends Tower {
 	fire(target) {
 		window.gamesession.projectiles.push(new __WEBPACK_IMPORTED_MODULE_3__LightningBolt__["a" /* default */]({
 			target,
+			stats: this.projectile,
 			pos: this.pos.center(-this.width, -this.height)
 		}));
 		this.cooldown += 5000 / this.speed;
@@ -562,15 +568,13 @@ function mergeDeep(target, ...sources) {
 
 "use strict";
 class Projectile {
-	constructor({ pos, damage, vel, radius, color, penetration }) {
+	constructor({ pos, vel, stats }) {
 		this.pos = pos;
 		this.vel = vel;
-		this.radius = radius;
-		this.damage = damage;
 		this.checkCollision = true;
-		this.color = color;
 		this.hitlist = [];
-		this.penetration = penetration;
+
+		Object.assign(this, stats);
 	}
 	update() {
 		this.pos.moveVector(this.vel);
@@ -1001,7 +1005,7 @@ class Game {
 			this.enemies.push(enem);
 		}
 	}
-	canPlaceTower(vector, tower) {
+	canPlaceTowerRect(vector, tower) {
 		let { width, height } = tower;
 		let player = this.players[0];
 		if (player.towers.some(tower => {
@@ -1036,6 +1040,26 @@ class Game {
 					vector.y < y + hei && vector.y + height > y) {
 					return false;
 				}
+			}
+		}
+		return true;
+	}
+	canPlaceTower(vector, tower) {
+		let radius = tower.width / 2 * (2 / 3);
+		let player = this.players[0];
+		if (player.towers.some(tow => {
+			return tow.pos.distanceTo(vector) < radius + tow.width / 2 * (2 / 3);
+		})) {
+			return false;
+		} else {
+			for (let i = 0; i < this.world.path.length - 1; i++) {
+				let p = this.world.path[i];
+				let np = this.world.path[i + 1];
+				let lw = this.world.pathWidth / 2;
+				let radius = tower.width / 2;
+				let bool = checkLineCircleCollision(p, np, vector.center(-tower.width, -tower.height), radius + lw * (2 / 3));
+
+				if (bool) return false;
 			}
 		}
 		return true;
@@ -1119,30 +1143,35 @@ function capFirstLetter(string) {
 
 /* harmony default export */ __webpack_exports__["a"] = (Game);
 
+function checkLineCircleCollision(point1, point2, circle, radius) {
+	let ABE = Math.atan2(point2.y - point1.y, point2.x - point1.x)
+	let DBE = Math.atan2(circle.y - point1.y, circle.x - point1.x)
+	let CBD = ABE - DBE
+	let BD = Math.sin(CBD) * Math.hypot(circle.y - point1.y, circle.x - point1.x)
+
+	if (radius > Math.abs(BD)) {
+		if (circle.x + radius > point1.x && circle.x - radius < point2.x &&
+			circle.y + radius > point1.y && circle.y - radius < point2.y) {
+			return true;
+		}
+	}
+	return false;
+}
+
 /***/ }),
 /* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__NewImage__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Projectile__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Projectile__ = __webpack_require__(4);
 
 
-
-class Explosive extends __WEBPACK_IMPORTED_MODULE_1__Projectile__["a" /* default */] {
+class Explosive extends __WEBPACK_IMPORTED_MODULE_0__Projectile__["a" /* default */] {
 	constructor(args) {
 		super(args);
 		let { target } = args;
 		this.checkCollision = false;
 		this.target = target;
-
-		this.image = __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/other/Bomb.png");
-		this.blastRadius = 100;
-		this.damage = 50;
-		this.speed = 8;
-		this.penetration = null;
-		this.radius = 16;
-		this.color = "#70b53f";
 	}
 	update() {
 		if (this.pos.distanceTo(this.target) < this.vel.getHyp()) {
@@ -3428,17 +3457,13 @@ function addN(iterations, classFunction) {
 
 
 class LightningBolt extends __WEBPACK_IMPORTED_MODULE_0__Projectile__["a" /* default */] {
-	constructor({ pos, target, upgrades }) {
-		super({ pos });
+	constructor(args) {
+		super(args);
+		let { target } = args;
 		this.checkCollision = false;
 		this.color = "#7DF9FF";
-		this.damage = 3;
-		this.speed = 100;
-		this.penetration = 3;
-		Object.assign(this, upgrades);
-		this.range = 120;
 
-		this.duration = 30;
+		this.duration = 10;
 		this.frameCount = 0;
 
 		this.targets = [target];
@@ -3455,10 +3480,8 @@ class LightningBolt extends __WEBPACK_IMPORTED_MODULE_0__Projectile__["a" /* def
 	}
 	update() {
 		this.frameCount++;
-		console.log(this.targets.length)
 		if (this.frameCount < this.duration) {
 			this.targets.forEach(e => {
-				console.log("hurt")
 				if (e.hurt(this.damage)) {
 					this.targets.splice(this.targets.indexOf(e), 1);
 				}
