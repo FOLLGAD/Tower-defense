@@ -1,7 +1,7 @@
 # Tower Defense
 
 ## Todo
-* Buyable upgrades
+* Buyable upgrades [done]
 * Explosive projectiles (Bomber) [done(kindof)]
 * Map props: Cacti and trees
 * Cactus texture
