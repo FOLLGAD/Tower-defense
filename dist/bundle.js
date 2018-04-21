@@ -60,24 +60,11 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 5);
+/******/ 	return __webpack_require__(__webpack_require__.s = 7);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-function NewImg(src) {
-	let img = new Image();
-	img.src = src;
-	return img;
-}
-
-/* harmony default export */ __webpack_exports__["a"] = (NewImg);
-
-/***/ }),
-/* 1 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -134,98 +121,45 @@ class Vector {
 /* harmony default export */ __webpack_exports__["a"] = (Vector);
 
 /***/ }),
+/* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+function NewImg(src) {
+	let img = new Image();
+	img.src = src;
+	return img;
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (NewImg);
+
+/***/ }),
 /* 2 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__NewImage__ = __webpack_require__(0);
+class Projectile {
+	constructor({ pos, vel, stats }) {
+		this.pos = pos;
+		this.vel = vel;
+		this.checkCollision = true;
+		this.hitlist = [];
 
-
-class Enemy {
-	constructor({ type = "Ogre" }) {
-		this.type = type;
-
-		let enemy = Enemy.Types[type];
-
-		// Copy all properties from enemy to this context.
-		Object.assign(this, enemy);
-
-		this.pathIndex = 1;
-		this.alive = true;
-		this.pos = window.gamesession.world.path[0].center(this.width, this.height);
-		this.distanceWalked = 0;
-		this.won = false;
-	}
-	draw(ctx) {
-		ctx.drawImage(this.image, this.pos.x, this.pos.y, this.width, this.height);
-		// ctx.fillStyle = "#888888";
-		// ctx.fillRect(this.pos.x, this.pos.y - 3, this.width, 2);
-		ctx.fillStyle = "#bb2233";
-		ctx.fillRect(this.pos.x, this.pos.y - 4, this.width * (this.health / Enemy.Types[this.type].health), 3);
-	}
-	hurt(damage) {
-		this.health -= damage;
-		if (this.health <= 0) {
-			let enemies = window.gamesession.enemies;
-			window.gamesession.players[0].money += this.drop;
-			this.die();
-			enemies.splice(enemies.indexOf(this), 1);
-			return true;
-		}
-		return false;
-	}
-	die() {
-		this.alive = false;
-	}
-	win() {
-		window.gamesession.lives -= this.damage;
-		this.alive = false;
-		this.won = true;
-	}
-	getPosFromPath(path) {
-		let dw = this.distanceWalked;
-		for (let i = 0; i < path.length - 1; i++) {
-			let nw = dw - path[i].distanceTo(path[i + 1]);
-			if (nw > 0) {
-				dw = nw;
-			} else if (i < path.length) {
-				this.pos = path[i].clone().moveTowards(path[i + 1], dw).center(this.width, this.height);
-				return;
-			}
-		}
-		this.win();
+		Object.assign(this, stats);
 	}
 	update() {
-		this.distanceWalked += this.walkingSpeed;
-		this.getPosFromPath(window.gamesession.world.path);
+		this.pos.moveVector(this.vel);
+	}
+	draw(ctx) {
+		ctx.fillStyle = this.color;
+		ctx.beginPath();
+		ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.closePath();
 	}
 }
 
-Enemy.Types = {
-	Ogre: {
-		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/enemies/base.png"),
-		drop: 10,
-		walkingSpeed: 2,
-		width: 48,
-		height: 48,
-		health: 100,
-		damage: 1,
-		armor: 2,
-	},
-	Goblin: {
-		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/enemies/base.png"),
-		drop: 5,
-		walkingSpeed: 4,
-		width: 32,
-		height: 32,
-		health: 50,
-		damage: 1,
-		armor: 1,
-	}
-}
-
-
-/* harmony default export */ __webpack_exports__["a"] = (Enemy);
+/* harmony default export */ __webpack_exports__["a"] = (Projectile);
 
 /***/ }),
 /* 3 */
@@ -233,11 +167,11 @@ Enemy.Types = {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Towers; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__NewImage__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Projectile__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Explosive__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__LightningBolt__ = __webpack_require__(21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Vector__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__NewImage__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Projectile__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Explosive__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__LightningBolt__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Vector__ = __webpack_require__(0);
 
 
 
@@ -595,823 +529,97 @@ function mergeDeep(target, ...sources) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-class Projectile {
-	constructor({ pos, vel, stats }) {
-		this.pos = pos;
-		this.vel = vel;
-		this.checkCollision = true;
-		this.hitlist = [];
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__NewImage__ = __webpack_require__(1);
 
-		Object.assign(this, stats);
-	}
-	update() {
-		this.pos.moveVector(this.vel);
+
+class Enemy {
+	constructor({ type = "Ogre" }) {
+		this.type = type;
+
+		let enemy = Enemy.Types[type];
+
+		// Copy all properties from enemy to this context.
+		Object.assign(this, enemy);
+
+		this.pathIndex = 1;
+		this.alive = true;
+		this.pos = window.gamesession.world.path[0].center(this.width, this.height);
+		this.distanceWalked = 0;
+		this.won = false;
 	}
 	draw(ctx) {
-		ctx.fillStyle = this.color;
-		ctx.beginPath();
-		ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
-		ctx.fill();
-		ctx.closePath();
+		ctx.drawImage(this.image, this.pos.x, this.pos.y, this.width, this.height);
+		// ctx.fillStyle = "#888888";
+		// ctx.fillRect(this.pos.x, this.pos.y - 3, this.width, 2);
+		ctx.fillStyle = "#bb2233";
+		ctx.fillRect(this.pos.x, this.pos.y - 4, this.width * (this.health / Enemy.Types[this.type].health), 3);
+	}
+	hurt(damage) {
+		this.health -= damage;
+		if (this.health <= 0) {
+			let enemies = window.gamesession.enemies;
+			window.gamesession.players[0].money += this.drop;
+			this.die();
+			enemies.splice(enemies.indexOf(this), 1);
+			return true;
+		}
+		return false;
+	}
+	die() {
+		this.alive = false;
+	}
+	win() {
+		window.gamesession.lives -= this.damage;
+		this.alive = false;
+		this.won = true;
+	}
+	getPosFromPath(path) {
+		let dw = this.distanceWalked;
+		for (let i = 0; i < path.length - 1; i++) {
+			let nw = dw - path[i].distanceTo(path[i + 1]);
+			if (nw > 0) {
+				dw = nw;
+			} else if (i < path.length) {
+				this.pos = path[i].clone().moveTowards(path[i + 1], dw).center(this.width, this.height);
+				return;
+			}
+		}
+		this.win();
+	}
+	update() {
+		this.distanceWalked += this.walkingSpeed;
+		this.getPosFromPath(window.gamesession.world.path);
 	}
 }
 
-/* harmony default export */ __webpack_exports__["a"] = (Projectile);
+Enemy.Types = {
+	Ogre: {
+		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/enemies/base.png"),
+		drop: 10,
+		walkingSpeed: 2,
+		width: 48,
+		height: 48,
+		health: 100,
+		damage: 1,
+		armor: 2,
+	},
+	Goblin: {
+		image: __WEBPACK_IMPORTED_MODULE_0__NewImage__["a" /* default */]("./resources/enemies/base.png"),
+		drop: 5,
+		walkingSpeed: 4,
+		width: 32,
+		height: 32,
+		health: 50,
+		damage: 1,
+		armor: 1,
+	}
+}
+
+
+/* harmony default export */ __webpack_exports__["a"] = (Enemy);
 
 /***/ }),
 /* 5 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Game__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Enemy__ = __webpack_require__(2);
-
-
-
-function NewGame() {
-	window.gamesession = new __WEBPACK_IMPORTED_MODULE_0__Game__["a" /* default */]({});
-	window.gamesession.startAnimation();
-	window.gamesession.togglePlay();
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-	document.getElementsByClassName("spawn-enemies")[0].addEventListener("click", function (e) {
-		if (e.target.classList.contains("spawn-enemy")) {
-			window.gamesession.enemies.push(new __WEBPACK_IMPORTED_MODULE_1__Enemy__["a" /* default */]({ type: e.target.value }))
-		}
-	})
-});
-
-document.addEventListener("DOMContentLoaded", NewGame);
-
-/***/ }),
-/* 6 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Vector__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Tower__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Player__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__World__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Waves__ = __webpack_require__(20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__Animation__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__NewImage__ = __webpack_require__(0);
-
-
-
-
-
-
-
-
-let UI = {
-	fastForward: __WEBPACK_IMPORTED_MODULE_6__NewImage__["a" /* default */]("./resources/ui/fast-forward.png"),
-	play: __WEBPACK_IMPORTED_MODULE_6__NewImage__["a" /* default */]("./resources/ui/play.png"),
-	pause: __WEBPACK_IMPORTED_MODULE_6__NewImage__["a" /* default */]("./resources/ui/pause.png")
-}
-
-function isCircleRectColliding(circle, rect) {
-	var distX = Math.abs(circle.pos.x - rect.pos.x - rect.width / 2);
-	var distY = Math.abs(circle.pos.y - rect.pos.y - rect.height / 2);
-
-	if (distX > (rect.width / 2 + circle.radius)) {
-		return false;
-	}
-	if (distY > (rect.height / 2 + circle.radius)) {
-		return false;
-	}
-
-	if (distX <= (rect.width / 2)) {
-		return true;
-	}
-	if (distY <= (rect.height / 2)) {
-		return true;
-	}
-
-	var dx = distX - rect.width / 2;
-	var dy = distY - rect.height / 2;
-	return (dx * dx + dy * dy <= (circle.radius * circle.radius));
-}
-
-class Game {
-	constructor() {
-		let __game = this;
-		this.mousepos = new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](null, null);
-		this.canvas = document.createElement("canvas");
-		// this.canvas.imageSmoothingEnabled = false;
-		let gamediv = document.getElementById("game")
-		gamediv.appendChild(this.canvas);
-		this.ctx = this.canvas.getContext("2d");
-		this.selectedTower = null;
-		this.fps = this.standardFps = 30;
-
-		this.fastForwarded = false;
-
-		(function () {
-			let towerDisplay = document.createElement("div");
-			towerDisplay.id = "tower-display";
-
-			let div = document.createElement("div");
-
-			let canv = document.createElement("canvas");
-			canv.id = "tower-canvas";
-			div.appendChild(canv);
-
-			canv.width = 100;
-			canv.height = 100;
-
-			__game.towerDisplay = {
-				elem: towerDisplay,
-				canvas: canv,
-				ctx: canv.getContext("2d"),
-			};
-
-			towerDisplay.appendChild(div);
-			// towerDisplay.style.display = "none";
-			let buttonDiv = document.createElement("div");
-			buttonDiv.className = "buttons";
-			buttonDiv.appendChild((function () {
-				let button = document.createElement("button");
-				button.textContent = "First";
-				button.value = "first";
-				return button;
-			})());
-			buttonDiv.appendChild((function () {
-				let button = document.createElement("button");
-				button.textContent = "Closest";
-				button.value = "closest";
-				return button;
-			})());
-			buttonDiv.appendChild((function () {
-				let button = document.createElement("button");
-				button.textContent = "Last";
-				button.value = "last";
-				return button;
-			})());
-			buttonDiv.appendChild((function () {
-				let button = document.createElement("button");
-				button.textContent = "Weakest";
-				button.value = "weakest";
-				return button;
-			})());
-			function call(e) {
-				__game.towerDisplay.selectedTower.method = e.target.value;
-			}
-			Array.prototype.forEach.call(buttonDiv.children, button => {
-				button.addEventListener("click", call);
-			})
-			towerDisplay.appendChild(buttonDiv);
-			gamediv.appendChild(towerDisplay);
-
-			let upgradediv = document.createElement("div");
-			upgradediv.id = "upgrades";
-			towerDisplay.appendChild(upgradediv);
-
-			let menu = document.getElementById("menu");
-			let fastForwardOrNextWave = document.createElement("div");
-			fastForwardOrNextWave.className = "speed";
-			fastForwardOrNextWave.addEventListener("click", function () {
-				if (__game.wave.active) {
-					__game.toggleFastForward();
-				} else {
-					__game.nextWave();
-				}
-			})
-			fastForwardOrNextWave.appendChild((function () {
-				let img = document.createElement("img");
-				img.src = UI.fastForward.src;
-				img.className = "fast-forward";
-				img.style.display = "none";
-				return img;
-			})());
-			fastForwardOrNextWave.appendChild((function () {
-				let img = document.createElement("img");
-				img.src = UI.play.src;
-				img.className = "play";
-				img.style.display = null;
-				return img;
-			})());
-			menu.appendChild(fastForwardOrNextWave);
-
-			let playPause = document.createElement("div");
-			playPause.className = "speed play-pause";
-			let imgpl = document.createElement("img");
-			imgpl.src = UI.pause.src;
-			playPause.appendChild(imgpl);
-			menu.appendChild(playPause);
-			playPause.addEventListener("click", () => {
-				__game.togglePlay();
-			});
-
-			let towermenu = document.createElement("div");
-			towermenu.className = "tower-menu";
-			menu.appendChild(towermenu);
-			Object.keys(__WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* Towers */]).forEach(towername => {
-				let tower = __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* Towers */][towername];
-
-				let item = document.createElement("div");
-				towermenu.appendChild(item);
-
-				let image = document.createElement("img");
-				image.src = tower.image.src;
-				item.appendChild(image);
-				let pricetext = document.createElement("span");
-				pricetext.className = "price";
-				pricetext.innerHTML = `${tower.price}c`;
-				item.appendChild(pricetext);
-				item.className = "tower";
-
-				towermenu.appendChild(item);
-				item.addEventListener("click", function () {
-					if (this.classList.contains("active")) this.classList.remove("active");
-					else {
-						let elem = document.querySelector(".tower.active");
-						if (elem) elem.classList.remove("active");
-						this.classList.add("active");
-					}
-					if (__game.selectedTower == __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* Towers */][towername]) {
-						__game.deselectBuyTower();
-					} else {
-						__game.selectedTower = __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* Towers */][towername];
-					}
-				})
-			});
-		})();
-
-		this.enemies = [];
-		this.animations = [];
-		this.players = [new __WEBPACK_IMPORTED_MODULE_2__Player__["a" /* default */]({})];
-		this.projectiles = [];
-		this.world = new __WEBPACK_IMPORTED_MODULE_3__World__["a" /* default */]({});
-		this.lives = 20;
-		this.canvas.height = this.world.height;
-		this.canvas.width = this.world.width;
-
-		this.canvas.addEventListener("click", e => {
-			let player = this.players[0];
-			if (this.selectedTower == null) {
-				// Attempt to open settings for tower clicked on.
-				let towerln = player.towers.length;
-				for (let i = 0; i < towerln; i++) {
-					let tower = player.towers[i];
-					if (tower.pos.x < this.mousepos.x && tower.pos.x + tower.width > this.mousepos.x &&
-						tower.pos.y < this.mousepos.y && tower.pos.y + tower.height > this.mousepos.y) {
-						this.displayTower(tower);
-						return;
-					}
-				}
-				this.towerDisplay.selectedTower = null;
-			} else {
-				// Place new tower
-				let { width, height } = this.selectedTower;
-				let vector = new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](e.clientX - width / 2, e.clientY - height / 2),
-					tower = this.selectedTower;
-				if (this.canPlaceTower(vector, tower) && player.buyTower({ vector, tower })) {
-					this.deselectBuyTower();
-				}
-			}
-		});
-		this.canvas.addEventListener("mousemove", function (e) {
-			__game.mousepos.x = e.clientX;
-			__game.mousepos.y = e.clientY;
-			__game.hideCursor = false;
-		});
-		this.canvas.addEventListener("mouseleave", function () {
-			__game.hideCursor = true;
-		});
-		this.wave = {
-			number: 0,
-			queue: [],
-			passedTime: 0,
-			active: false
-		}
-	}
-	deselectBuyTower() {
-		this.selectedTower = null;
-		let elem = document.querySelector(".tower.active");
-		elem && elem.classList.remove("active");
-	}
-	startAnimation() {
-		this.animid = requestAnimationFrame(this.draw.bind(this));
-	}
-	stopAnimation() {
-		cancelAnimationFrame(this.animid);
-	}
-	togglePlay() {
-		this.play = !this.play;
-		if (this.play) {
-			document.querySelector("#menu .speed.play-pause img").src = UI.pause.src;
-			this.update();
-		} else {
-			document.querySelector("#menu .speed.play-pause img").src = UI.play.src;
-		}
-	}
-	checkEnemyCollisions() {
-		let projectiles = this.projectiles.filter(proj => proj.checkCollision === true);
-		for (let i = 0; i < projectiles.length; i++) {
-			let proj = projectiles[i];
-
-			for (let o = 0; o < this.enemies.length; o++) {
-				let enemy = this.enemies[o];
-
-				let colliding = isCircleRectColliding(proj, enemy);
-				if (colliding && proj.hitlist.indexOf(enemy) === -1) {
-					proj.penetration -= enemy.armor;
-
-					this.animations.push(new __WEBPACK_IMPORTED_MODULE_5__Animation__["a" /* Damage */]({ pos: enemy.pos.center(-enemy.width, -enemy.height) }));
-
-					if (enemy.hurt(proj.damage)) {
-						o -= 1;
-					} else {
-						proj.hitlist.push(enemy);
-					}
-					if (proj.penetration <= 0) {
-						this.projectiles.splice(this.projectiles.indexOf(proj), 1);
-						break;
-					}
-				}
-			}
-		}
-	}
-	detonate(explosive) {
-		let enemies = this.enemies;
-		let blast = { pos: explosive.pos, radius: explosive.blastRadius };
-		this.animations.push(new __WEBPACK_IMPORTED_MODULE_5__Animation__["b" /* Explosion */]({ pos: explosive.pos.clone(), radius: explosive.blastRadius }))
-		for (let i = 0; i < enemies.length; i++) {
-			let enemy = enemies[i];
-			if (isCircleRectColliding(blast, enemy)) {
-				if (enemy.hurt(explosive.damage)) {
-					i = i - 1;
-				}
-			}
-		}
-		this.projectiles.splice(explosive);
-	}
-	updateUpgrades(tower) {
-		let player = this.players[0];
-		let upgradediv = document.getElementById("upgrades");
-		upgradediv.innerHTML = "";
-		let baseBtn = document.createElement("button");
-		baseBtn.className = "upgrade-btn";
-		Object.keys(tower.upgrades).forEach(upg => {
-			let upgradeButton = baseBtn.cloneNode();
-			let upgrade = tower.upgrades[upg][tower.levels[upg]];
-
-			if (upgrade) {
-				upgradeButton.addEventListener("click", () => {
-					let price = upgrade.price;
-					if (player.money >= price) {
-						player.money -= price;
-						tower.upgrade(upg);
-						this.displayTower(tower);
-					}
-				});
-
-				upgradeButton.textContent = `${capFirstLetter(upg)}: ${upgrade.price}c`;
-				upgradediv.appendChild(upgradeButton);
-			}
-		})
-	}
-	displayTower(tower) {
-		this.towerDisplay.selectedTower = tower;
-		// let td = this.towerDisplay.elem;
-		this.updateUpgrades(tower);
-	}
-	drawTowerRange(pos, range, highlight) {
-		this.ctx.fillStyle = highlight ? "rgba(180, 50, 50, 0.3)" : "rgba(100, 100, 100, 0.3)";
-		this.ctx.beginPath();
-		this.ctx.arc(pos.x, pos.y, range, 0, Math.PI * 2);
-		this.ctx.fill();
-	}
-	nextWave() {
-		let nr = ++this.wave.number;
-		this.wave.queue = __WEBPACK_IMPORTED_MODULE_4__Waves__["a" /* GetWave */](nr);
-		let menu = document.getElementById("menu");
-		menu.querySelector(".play").style.display = "none";
-		menu.querySelector(".fast-forward").style.display = null;
-		this.wave.active = true;
-	}
-	endWave() {
-		let menu = document.getElementById("menu");
-		menu.querySelector(".play").style.display = null;
-		menu.querySelector(".fast-forward").style.display = "none";
-		this.wave.active = false;
-		this.wave.passedTime = 0;
-		this.resetFastForward();
-	}
-	resetFastForward() {
-		this.fastForwarded = false;
-		this.fps = this.standardFps;
-		document.querySelector(".fast-forward").classList.remove("active");
-	}
-	toggleFastForward() {
-		if (this.fastForwarded) {
-			this.fastForwarded = false;
-			this.fps = this.standardFps;
-			document.querySelector(".fast-forward").classList.remove("active");
-		} else {
-			this.fastForwarded = true;
-			this.fps = this.standardFps * 2;
-			document.querySelector(".fast-forward").classList.add("active");
-		}
-	}
-	currentlyInWave() {
-		return (this.wave.queue.length !== 0);
-	}
-	spawnEnemies() {
-		this.wave.passedTime += 1000 / this.fps;
-		if (this.wave.queue[0].enemies.length === 0) {
-			if (this.wave.queue.length === 1) return this.endWave();
-			if (this.wave.passedTime > this.wave.queue[0].delay) {
-				this.wave.passedTime -= this.wave.queue[0].delay;
-				this.wave.queue.shift();
-			}
-		} else if (this.wave.passedTime > this.wave.queue[0].interval) {
-			this.wave.passedTime -= this.wave.queue[0].interval;
-			let enem = this.wave.queue[0].enemies.shift();
-			this.enemies.push(enem);
-		}
-	}
-	canPlaceTower(vector, tower) {
-		let radius = tower.width / 2 * (2 / 3);
-		let player = this.players[0];
-		if (player.towers.some(tow => {
-			return tow.pos.distanceTo(vector) < radius + tow.width / 2 * (2 / 3);
-		})) {
-			return false;
-		} else {
-			for (let i = 0; i < this.world.path.length - 1; i++) {
-				let p = this.world.path[i];
-				let np = this.world.path[i + 1];
-				let lw = this.world.pathWidth / 2;
-				let radius = tower.width / 2;
-				let center = vector.center(-tower.width, -tower.height);
-				if (i == 1);
-				let bool = checkLineCircleCollision(p, np, center, radius + lw * (2 / 3), i == 1);
-				if (bool) return false;
-			}
-		}
-		return true;
-	}
-	update() {
-		if (!this.play) return;
-		this.animations.forEach(anim => {
-			anim.update();
-		})
-		this.projectiles.forEach(proj => {
-			proj.update();
-			if (this.world.isOutOfBounds(proj.pos)) {
-				this.projectiles.splice(this.projectiles.indexOf(proj), 1);
-			}
-		});
-		this.enemies.map(enemy => {
-			enemy.update();
-		});
-		this.enemies = this.enemies.filter(enemy => {
-			return enemy.alive && !enemy.won;
-		});
-		this.players.forEach(player => {
-			player.update();
-		});
-		this.checkEnemyCollisions();
-		if (this.wave.active) {
-			this.spawnEnemies();
-		}
-		setTimeout(this.update.bind(this), 1000 / this.fps);
-	}
-	draw() {
-		let canvas = this.canvas,
-			ctx = this.ctx;
-		let td = this.towerDisplay;
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		td.ctx.clearRect(0, 0, td.canvas.width, td.canvas.height);
-
-		this.world.draw(ctx);
-		this.enemies.forEach(enemy => enemy.draw(ctx));
-		if (this.selectedTower != null && !this.hideCursor) {
-			let tw = this.selectedTower;
-			let canPlace = this.canPlaceTower(new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](this.mousepos.x, this.mousepos.y).center(tw.width, tw.height), this.selectedTower);
-
-			this.drawTowerRange(new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](this.mousepos.x, this.mousepos.y), tw.range, !canPlace);
-			ctx.drawImage(tw.image, this.mousepos.x - tw.width / 2, this.mousepos.y - tw.height / 2, tw.width, tw.height);
-		}
-		if (td.selectedTower) {
-			this.drawTowerRange(td.selectedTower.pos.center(-td.selectedTower.width, -td.selectedTower.height), td.selectedTower.range);
-		}
-		this.players.forEach(player => player.draw(ctx));
-		if (td.selectedTower) {
-			let dx = 0;
-			let dy = 0;
-			let swidth = td.selectedTower.width * 1.4;
-			let sheight = td.selectedTower.height * 1.4;
-			let sx = td.selectedTower.pos.x - (swidth - td.selectedTower.width) / 2;
-			let sy = td.selectedTower.pos.y - (sheight - td.selectedTower.height) / 2;
-			let dwidth = td.canvas.width;
-			let dheight = td.canvas.height;
-			td.ctx.drawImage(canvas, sx, sy, swidth, sheight, dx, dy, dwidth, dheight);
-		}
-		this.animations.forEach(anim => {
-			anim.draw(ctx);
-		})
-		this.projectiles.forEach(proj => proj.draw(ctx));
-		ctx.fillStyle = "#333"
-		ctx.font = "24px 'Segoe UI'";
-		ctx.textAlign = "left";
-		ctx.fillText(`Lives: ${this.lives}`, 10, 30);
-		ctx.textAlign = "right";
-		ctx.fillText(`Coin: ${this.players[0].money}`, canvas.width - 10, 30);
-		ctx.textAlign = "center";
-		ctx.fillText(`Wave: ${this.wave.number}`, canvas.width / 2, 30);
-		requestAnimationFrame(this.draw.bind(this));
-	}
-}
-
-function capFirstLetter(string) {
-	return string.replace("-", " ").charAt(0).toUpperCase() + string.slice(1);
-}
-
-/* harmony default export */ __webpack_exports__["a"] = (Game);
-
-function checkLineCircleCollision(point1, point2, circle, radius) {
-	let ABE = Math.atan2(point2.y - point1.y, point2.x - point1.x)
-	let DBE = Math.atan2(circle.y - point1.y, circle.x - point1.x)
-	let CBD = ABE - DBE
-	let BD = Math.sin(CBD) * Math.hypot(circle.y - point1.y, circle.x - point1.x)
-
-
-	if (radius > Math.abs(BD)) {
-		let minX, minY, width, height;
-
-		if (point1.x < point2.x) {
-			minX = point1.x;
-			width = point2.x - minX;
-		} else {
-			minX = point2.x;
-			width = point1.x - minX;
-		}
-		if (point1.y < point2.y) {
-			minY = point1.y;
-			height = point2.y - minY;
-		} else {
-			minY = point2.y;
-			height = point1.y - minY;
-		}
-
-		if (isCircleRectColliding({ pos: { x: circle.x, y: circle.y }, radius: radius }, { pos: { x: minX, y: minY }, width: width, height: height })) {
-			return true;
-		}
-	}
-	return false;
-}
-
-/***/ }),
-/* 7 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Projectile__ = __webpack_require__(4);
-
-
-class Explosive extends __WEBPACK_IMPORTED_MODULE_0__Projectile__["a" /* default */] {
-	constructor(args) {
-		super(args);
-		let { target } = args;
-		this.checkCollision = false;
-		this.target = target;
-	}
-	update() {
-		if (this.pos.distanceTo(this.target) < this.vel.getHyp()) {
-			this.pos = this.target;
-			window.gamesession.detonate(this);
-		} else {
-			this.pos.moveTowards(this.target, this.vel.getHyp());
-		}
-	}
-}
-
-/* harmony default export */ __webpack_exports__["a"] = (Explosive);
-
-/***/ }),
-/* 8 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Tower__ = __webpack_require__(3);
-
-
-class Player {
-	constructor({ name = "Player" }) {
-		this.name = name;
-		this.towers = [];
-		this.money = 300;
-	}
-	buyTower({ vector, tower }) {
-		let towercost = tower.price;
-		if (this.money - towercost >= 0) {
-			this.money = this.money - towercost;
-			this.towers.push(new tower.type({ vector }));
-			return true;
-		}
-		return false;
-	}
-	update() {
-		this.towers.forEach(tower => {
-			tower.update(window.gamesession.enemies);
-		});
-	}
-	draw(ctx) {
-		this.towers.forEach(tower => {
-			tower.draw(ctx);
-		});
-	}
-}
-
-/* harmony default export */ __webpack_exports__["a"] = (Player);
-
-/***/ }),
-/* 9 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Maps__ = __webpack_require__(10);
-
-
-class World {
-	constructor({ mapnr = 0 }) {
-		Object.assign(this, __WEBPACK_IMPORTED_MODULE_0__Maps__["a" /* default */][mapnr]);
-	}
-	isOutOfBounds(vector) {
-		return vector.x < 0 || vector.x > this.width || vector.y < 0 || vector.y > this.height;
-	}
-	draw(ctx) {
-		ctx.fillStyle = this.backgroundColor;
-		ctx.fillRect(0, 0, this.width, this.height);
-		ctx.lineJoin = "round"
-		ctx.beginPath();
-		ctx.strokeStyle = this.pathColor;
-		ctx.lineWidth = this.pathWidth;
-		this.path.forEach((vector, index) => {
-			if (index === 0) return ctx.moveTo(vector.x, vector.y);
-			ctx.lineTo(vector.x, vector.y);
-		})
-		ctx.stroke();
-	}
-}
-
-/* harmony default export */ __webpack_exports__["a"] = (World);
-
-/***/ }),
-/* 10 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Vector__ = __webpack_require__(1);
-
-
-const Maps = {
-	0: {
-		width: 1000,
-		height: 600,
-		backgroundColor: "#fcbf49",
-		// backgroundColor: "#f4d35e",
-		// pathColor: "#003049",
-		pathColor: "#ebebd3",
-		pathWidth: 48,
-		path: [
-			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](-50, 100),
-			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](120, 100),
-			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](100, 300),
-			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](400, 300),
-			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](400, 100),
-			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](275, 100),
-			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](275, 450),
-			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](600, 450),
-			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](600, 200),
-			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](1050, 200),
-		],
-		props: [
-			{ pos: new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](600, 150), type: "Cactus" }, // Display these on the map allso!
-			{ pos: new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](120, 150), type: "Cactus" },
-			{ pos: new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](300, 450), type: "Cactus" },
-			{ pos: new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](750, 320), type: "Cactus" },
-		]
-	}
-}
-
-/* harmony default export */ __webpack_exports__["a"] = (Maps);
-
-/***/ }),
-/* 11 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Vector__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_color__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_color___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_color__);
-
-
-
-// let Images = {
-// 	Explosion: NewImage("")
-// }
-
-/**
- * Animation class for animations
- */
-class Animation {
-	constructor({ duration, pos }) {
-		this.startTime = Date.now();
-		this.duration = duration;
-		this.pos = pos;
-	}
-	update() {
-		this.frameCount++;
-		if (this.frameCount > this.duration) {
-			let anims = window.gamesession.animations;
-			anims.splice(anims.indexOf(this), 1);
-			return;
-		}
-		this.particles.forEach(particle => {
-			particle.update();
-		})
-	}
-	draw(ctx) {
-		this.particles.forEach(particle => {
-			particle.draw(ctx, 1 - this.frameCount / this.duration);
-		})
-	}
-}
-/* unused harmony export Animation */
-
-
-/**
- * Particle class
- * @param {number} width
- * @param {Vector} vel
- * @param {Vector} pos
- */
-
-class Particle {
-	constructor({ width = 8, height = 8, color, vel, pos }) {
-		this.width = width;
-		this.height = height;
-		this.color = color;
-		this.vel = vel;
-		this.pos = pos;
-	}
-	draw(ctx, opacity) {
-		ctx.fillStyle = __WEBPACK_IMPORTED_MODULE_1_color___default.a(this.color).alpha(opacity);
-		ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-	}
-	update() {
-		this.pos.add(this.vel);
-	}
-}
-
-class Damage extends Animation {
-	constructor({ pos, duration = 20 }) {
-		super({ pos, duration });
-		this.particles = [];
-		this.frameCount = 0;
-
-		let particleNum = ((Math.random() * 5) | 0) + 5;
-		for (let i = 0; i < particleNum; i++) {
-			this.particles.push(new Particle({ color: "#d62f2f", pos: this.pos.clone(), vel: __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */].createFromAngle(Math.random() * Math.PI * 2, Math.random() + 1) }));
-		}
-	}
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = Damage;
-
-
-class Explosion extends Animation {
-	constructor({ pos, radius }) {
-		super({ pos });
-		this.vel = 8;
-		this.radius = radius;
-		this.currentRadius = 0;
-	}
-	draw(ctx) {
-		ctx.beginPath();
-		ctx.arc(this.pos.x, this.pos.y, this.currentRadius, 0, Math.PI * 2);
-		ctx.strokeStyle = __WEBPACK_IMPORTED_MODULE_1_color___default.a.rgb(120, 120, 120).alpha(1 - this.currentRadius / this.radius);
-		ctx.lineWidth = 25;
-		ctx.stroke();
-		ctx.closePath();
-	}
-	update() {
-		this.currentRadius += this.vel;
-		if (this.currentRadius > this.radius) {
-			let anims = window.gamesession.animations;
-			anims.splice(anims.indexOf(this), 1);
-		}
-	}
-}
-/* harmony export (immutable) */ __webpack_exports__["b"] = Explosion;
-
-
-/***/ }),
-/* 12 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -1566,11 +774,11 @@ module.exports = {
 };
 
 /***/ }),
-/* 13 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* MIT license */
-var cssKeywords = __webpack_require__(12);
+var cssKeywords = __webpack_require__(5);
 
 // NOTE: conversions should only return primitive values (i.e. arrays, or
 //       values that give correct `typeof` results).
@@ -2433,14 +1641,920 @@ convert.rgb.gray = function (rgb) {
 
 
 /***/ }),
+/* 7 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Game__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Enemy__ = __webpack_require__(4);
+
+
+
+function NewGame() {
+	window.gamesession = new __WEBPACK_IMPORTED_MODULE_0__Game__["a" /* default */]({});
+	window.gamesession.startAnimation();
+	window.gamesession.togglePlay();
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+	document.getElementsByClassName("spawn-enemies")[0].addEventListener("click", function (e) {
+		if (e.target.classList.contains("spawn-enemy")) {
+			window.gamesession.enemies.push(new __WEBPACK_IMPORTED_MODULE_1__Enemy__["a" /* default */]({ type: e.target.value }))
+		}
+	})
+});
+
+document.addEventListener("DOMContentLoaded", NewGame);
+
+/***/ }),
+/* 8 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Vector__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Tower__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Player__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__World__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Waves__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__Animation__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__NewImage__ = __webpack_require__(1);
+
+
+
+
+
+
+
+
+let UI = {
+	fastForward: __WEBPACK_IMPORTED_MODULE_6__NewImage__["a" /* default */]("./resources/ui/fast-forward.png"),
+	play: __WEBPACK_IMPORTED_MODULE_6__NewImage__["a" /* default */]("./resources/ui/play.png"),
+	pause: __WEBPACK_IMPORTED_MODULE_6__NewImage__["a" /* default */]("./resources/ui/pause.png")
+}
+
+function isCircleRectColliding(circle, rect) {
+	var distX = Math.abs(circle.pos.x - rect.pos.x - rect.width / 2);
+	var distY = Math.abs(circle.pos.y - rect.pos.y - rect.height / 2);
+
+	if (distX > (rect.width / 2 + circle.radius)) {
+		return false;
+	}
+	if (distY > (rect.height / 2 + circle.radius)) {
+		return false;
+	}
+
+	if (distX <= (rect.width / 2)) {
+		return true;
+	}
+	if (distY <= (rect.height / 2)) {
+		return true;
+	}
+
+	var dx = distX - rect.width / 2;
+	var dy = distY - rect.height / 2;
+	return (dx * dx + dy * dy <= (circle.radius * circle.radius));
+}
+
+class Game {
+	constructor() {
+		let __game = this;
+		this.mousepos = new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](null, null);
+		this.canvas = document.createElement("canvas");
+		// this.canvas.imageSmoothingEnabled = false;
+		let gamediv = document.getElementById("game")
+		gamediv.appendChild(this.canvas);
+		this.ctx = this.canvas.getContext("2d");
+		this.selectedTower = null;
+		this.fps = this.standardFps = 30;
+
+		this.fastForwarded = false;
+
+		(function () {
+			let towerDisplay = document.createElement("div");
+			towerDisplay.id = "tower-display";
+
+			let div = document.createElement("div");
+
+			let canv = document.createElement("canvas");
+			canv.id = "tower-canvas";
+			div.appendChild(canv);
+
+			canv.width = 100;
+			canv.height = 100;
+
+			__game.towerDisplay = {
+				elem: towerDisplay,
+				canvas: canv,
+				ctx: canv.getContext("2d"),
+			};
+
+			towerDisplay.appendChild(div);
+			// towerDisplay.style.display = "none";
+			let buttonDiv = document.createElement("div");
+			buttonDiv.className = "buttons";
+			buttonDiv.appendChild((function () {
+				let button = document.createElement("button");
+				button.textContent = "First";
+				button.value = "first";
+				return button;
+			})());
+			buttonDiv.appendChild((function () {
+				let button = document.createElement("button");
+				button.textContent = "Closest";
+				button.value = "closest";
+				return button;
+			})());
+			buttonDiv.appendChild((function () {
+				let button = document.createElement("button");
+				button.textContent = "Last";
+				button.value = "last";
+				return button;
+			})());
+			buttonDiv.appendChild((function () {
+				let button = document.createElement("button");
+				button.textContent = "Weakest";
+				button.value = "weakest";
+				return button;
+			})());
+			function call(e) {
+				__game.towerDisplay.selectedTower.method = e.target.value;
+			}
+			Array.prototype.forEach.call(buttonDiv.children, button => {
+				button.addEventListener("click", call);
+			})
+			towerDisplay.appendChild(buttonDiv);
+			gamediv.appendChild(towerDisplay);
+
+			let upgradediv = document.createElement("div");
+			upgradediv.id = "upgrades";
+			towerDisplay.appendChild(upgradediv);
+
+			let menu = document.getElementById("menu");
+			let fastForwardOrNextWave = document.createElement("div");
+			fastForwardOrNextWave.className = "speed";
+			fastForwardOrNextWave.addEventListener("click", function () {
+				if (__game.wave.active) {
+					__game.toggleFastForward();
+				} else {
+					__game.nextWave();
+				}
+			})
+			fastForwardOrNextWave.appendChild((function () {
+				let img = document.createElement("img");
+				img.src = UI.fastForward.src;
+				img.className = "fast-forward";
+				img.style.display = "none";
+				return img;
+			})());
+			fastForwardOrNextWave.appendChild((function () {
+				let img = document.createElement("img");
+				img.src = UI.play.src;
+				img.className = "play";
+				img.style.display = null;
+				return img;
+			})());
+			menu.appendChild(fastForwardOrNextWave);
+
+			let playPause = document.createElement("div");
+			playPause.className = "speed play-pause";
+			let imgpl = document.createElement("img");
+			imgpl.src = UI.pause.src;
+			playPause.appendChild(imgpl);
+			menu.appendChild(playPause);
+			playPause.addEventListener("click", () => {
+				__game.togglePlay();
+			});
+
+			let towermenu = document.createElement("div");
+			towermenu.className = "tower-menu";
+			menu.appendChild(towermenu);
+			Object.keys(__WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* Towers */]).forEach(towername => {
+				let tower = __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* Towers */][towername];
+
+				let item = document.createElement("div");
+				towermenu.appendChild(item);
+
+				let image = document.createElement("img");
+				image.src = tower.image.src;
+				item.appendChild(image);
+				let pricetext = document.createElement("span");
+				pricetext.className = "price";
+				pricetext.innerHTML = `${tower.price}c`;
+				item.appendChild(pricetext);
+				item.className = "tower";
+
+				towermenu.appendChild(item);
+				item.addEventListener("click", function () {
+					if (this.classList.contains("active")) this.classList.remove("active");
+					else {
+						let elem = document.querySelector(".tower.active");
+						if (elem) elem.classList.remove("active");
+						this.classList.add("active");
+					}
+					if (__game.selectedTower == __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* Towers */][towername]) {
+						__game.deselectBuyTower();
+					} else {
+						__game.selectedTower = __WEBPACK_IMPORTED_MODULE_1__Tower__["a" /* Towers */][towername];
+					}
+				})
+			});
+		})();
+
+		this.enemies = [];
+		this.animations = [];
+		this.players = [new __WEBPACK_IMPORTED_MODULE_2__Player__["a" /* default */]({})];
+		this.projectiles = [];
+		this.world = new __WEBPACK_IMPORTED_MODULE_3__World__["a" /* default */]({});
+		this.lives = 20;
+		this.canvas.height = this.world.height;
+		this.canvas.width = this.world.width;
+
+		this.canvas.addEventListener("click", e => {
+			let player = this.players[0];
+			if (this.selectedTower == null) {
+				// Attempt to open settings for tower clicked on.
+				let towerln = player.towers.length;
+				for (let i = 0; i < towerln; i++) {
+					let tower = player.towers[i];
+					if (tower.pos.x < this.mousepos.x && tower.pos.x + tower.width > this.mousepos.x &&
+						tower.pos.y < this.mousepos.y && tower.pos.y + tower.height > this.mousepos.y) {
+						this.displayTower(tower);
+						return;
+					}
+				}
+				this.towerDisplay.selectedTower = null;
+			} else {
+				// Place new tower
+				let { width, height } = this.selectedTower;
+				let vector = new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](e.clientX - width / 2, e.clientY - height / 2),
+					tower = this.selectedTower;
+				if (this.canPlaceTower(vector, tower) && player.buyTower({ vector, tower })) {
+					this.deselectBuyTower();
+				}
+			}
+		});
+		this.canvas.addEventListener("mousemove", function (e) {
+			__game.mousepos.x = e.clientX;
+			__game.mousepos.y = e.clientY;
+			__game.hideCursor = false;
+		});
+		this.canvas.addEventListener("mouseleave", function () {
+			__game.hideCursor = true;
+		});
+		this.wave = {
+			number: 0,
+			queue: [],
+			passedTime: 0,
+			active: false
+		}
+	}
+	deselectBuyTower() {
+		this.selectedTower = null;
+		let elem = document.querySelector(".tower.active");
+		elem && elem.classList.remove("active");
+	}
+	startAnimation() {
+		this.animid = requestAnimationFrame(this.draw.bind(this));
+	}
+	stopAnimation() {
+		cancelAnimationFrame(this.animid);
+	}
+	togglePlay() {
+		this.play = !this.play;
+		if (this.play) {
+			document.querySelector("#menu .speed.play-pause img").src = UI.pause.src;
+			this.update();
+		} else {
+			document.querySelector("#menu .speed.play-pause img").src = UI.play.src;
+		}
+	}
+	checkEnemyCollisions() {
+		let projectiles = this.projectiles.filter(proj => proj.checkCollision === true);
+		for (let i = 0; i < projectiles.length; i++) {
+			let proj = projectiles[i];
+
+			for (let o = 0; o < this.enemies.length; o++) {
+				let enemy = this.enemies[o];
+
+				let colliding = isCircleRectColliding(proj, enemy);
+				if (colliding && proj.hitlist.indexOf(enemy) === -1) {
+					proj.penetration -= enemy.armor;
+
+					this.animations.push(new __WEBPACK_IMPORTED_MODULE_5__Animation__["a" /* Damage */]({ pos: enemy.pos.center(-enemy.width, -enemy.height) }));
+
+					if (enemy.hurt(proj.damage)) {
+						o -= 1;
+					} else {
+						proj.hitlist.push(enemy);
+					}
+					if (proj.penetration <= 0) {
+						this.projectiles.splice(this.projectiles.indexOf(proj), 1);
+						break;
+					}
+				}
+			}
+		}
+	}
+	detonate(explosive) {
+		let enemies = this.enemies;
+		let blast = { pos: explosive.pos, radius: explosive.blastRadius };
+		this.animations.push(new __WEBPACK_IMPORTED_MODULE_5__Animation__["b" /* Explosion */]({ pos: explosive.pos.clone(), radius: explosive.blastRadius }))
+		for (let i = 0; i < enemies.length; i++) {
+			let enemy = enemies[i];
+			if (isCircleRectColliding(blast, enemy)) {
+				if (enemy.hurt(explosive.damage)) {
+					i = i - 1;
+				}
+			}
+		}
+		this.projectiles.splice(explosive);
+	}
+	updateUpgrades(tower) {
+		let player = this.players[0];
+		let upgradediv = document.getElementById("upgrades");
+		upgradediv.innerHTML = "";
+		let baseBtn = document.createElement("button");
+		baseBtn.className = "upgrade-btn";
+		Object.keys(tower.upgrades).forEach(upg => {
+			let upgradeButton = baseBtn.cloneNode();
+			let upgrade = tower.upgrades[upg][tower.levels[upg]];
+
+			if (upgrade) {
+				upgradeButton.addEventListener("click", () => {
+					let price = upgrade.price;
+					if (player.money >= price) {
+						player.money -= price;
+						tower.upgrade(upg);
+						this.displayTower(tower);
+					}
+				});
+
+				upgradeButton.textContent = `${capFirstLetter(upg)}: ${upgrade.price}c`;
+				upgradediv.appendChild(upgradeButton);
+			}
+		})
+	}
+	displayTower(tower) {
+		this.towerDisplay.selectedTower = tower;
+		// let td = this.towerDisplay.elem;
+		this.updateUpgrades(tower);
+	}
+	drawTowerRange(pos, range, highlight) {
+		this.ctx.fillStyle = highlight ? "rgba(180, 50, 50, 0.3)" : "rgba(100, 100, 100, 0.3)";
+		this.ctx.beginPath();
+		this.ctx.arc(pos.x, pos.y, range, 0, Math.PI * 2);
+		this.ctx.fill();
+	}
+	nextWave() {
+		let nr = ++this.wave.number;
+		this.wave.queue = __WEBPACK_IMPORTED_MODULE_4__Waves__["a" /* GetWave */](nr);
+		let menu = document.getElementById("menu");
+		menu.querySelector(".play").style.display = "none";
+		menu.querySelector(".fast-forward").style.display = null;
+		this.wave.active = true;
+	}
+	endWave() {
+		let menu = document.getElementById("menu");
+		menu.querySelector(".play").style.display = null;
+		menu.querySelector(".fast-forward").style.display = "none";
+		this.wave.active = false;
+		this.wave.passedTime = 0;
+		this.resetFastForward();
+	}
+	resetFastForward() {
+		this.fastForwarded = false;
+		this.fps = this.standardFps;
+		document.querySelector(".fast-forward").classList.remove("active");
+	}
+	toggleFastForward() {
+		if (this.fastForwarded) {
+			this.fastForwarded = false;
+			this.fps = this.standardFps;
+			document.querySelector(".fast-forward").classList.remove("active");
+		} else {
+			this.fastForwarded = true;
+			this.fps = this.standardFps * 2;
+			document.querySelector(".fast-forward").classList.add("active");
+		}
+	}
+	currentlyInWave() {
+		return (this.wave.queue.length !== 0);
+	}
+	spawnEnemies() {
+		this.wave.passedTime += 1000 / this.fps;
+		if (this.wave.queue[0].enemies.length === 0) {
+			if (this.wave.queue.length === 1) return this.endWave();
+			if (this.wave.passedTime > this.wave.queue[0].delay) {
+				this.wave.passedTime -= this.wave.queue[0].delay;
+				this.wave.queue.shift();
+			}
+		} else if (this.wave.passedTime > this.wave.queue[0].interval) {
+			this.wave.passedTime -= this.wave.queue[0].interval;
+			let enem = this.wave.queue[0].enemies.shift();
+			this.enemies.push(enem);
+		}
+	}
+	canPlaceTower(vector, tower) {
+		let radius = tower.width / 2 * (2 / 3);
+		let player = this.players[0];
+		if (player.towers.some(tow => {
+			return tow.pos.distanceTo(vector) < radius + tow.width / 2 * (2 / 3);
+		})) {
+			return false;
+		} else {
+			for (let i = 0; i < this.world.path.length - 1; i++) {
+				let p = this.world.path[i];
+				let np = this.world.path[i + 1];
+				let lw = this.world.pathWidth / 2;
+				let radius = tower.width / 2;
+				let center = vector.center(-tower.width, -tower.height);
+				if (i == 1);
+				let bool = checkLineCircleCollision(p, np, center, radius + lw * (2 / 3), i == 1);
+				if (bool) return false;
+			}
+		}
+		return true;
+	}
+	update() {
+		if (!this.play) return;
+		this.animations.forEach(anim => {
+			anim.update();
+		})
+		this.projectiles.forEach(proj => {
+			proj.update();
+			if (this.world.isOutOfBounds(proj.pos)) {
+				this.projectiles.splice(this.projectiles.indexOf(proj), 1);
+			}
+		});
+		this.enemies.map(enemy => {
+			enemy.update();
+		});
+		this.enemies = this.enemies.filter(enemy => {
+			return enemy.alive && !enemy.won;
+		});
+		this.players.forEach(player => {
+			player.update();
+		});
+		this.checkEnemyCollisions();
+		if (this.wave.active) {
+			this.spawnEnemies();
+		}
+		setTimeout(this.update.bind(this), 1000 / this.fps);
+	}
+	draw() {
+		let canvas = this.canvas,
+			ctx = this.ctx;
+		let td = this.towerDisplay;
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		td.ctx.clearRect(0, 0, td.canvas.width, td.canvas.height);
+
+		this.world.draw(ctx);
+		this.enemies.forEach(enemy => enemy.draw(ctx));
+		if (this.selectedTower != null && !this.hideCursor) {
+			let tw = this.selectedTower;
+			let canPlace = this.canPlaceTower(new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](this.mousepos.x, this.mousepos.y).center(tw.width, tw.height), this.selectedTower);
+
+			this.drawTowerRange(new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](this.mousepos.x, this.mousepos.y), tw.range, !canPlace);
+			ctx.drawImage(tw.image, this.mousepos.x - tw.width / 2, this.mousepos.y - tw.height / 2, tw.width, tw.height);
+		}
+		if (td.selectedTower) {
+			this.drawTowerRange(td.selectedTower.pos.center(-td.selectedTower.width, -td.selectedTower.height), td.selectedTower.range);
+		}
+		this.players.forEach(player => player.draw(ctx));
+		if (td.selectedTower) {
+			let dx = 0;
+			let dy = 0;
+			let swidth = td.selectedTower.width * 1.4;
+			let sheight = td.selectedTower.height * 1.4;
+			let sx = td.selectedTower.pos.x - (swidth - td.selectedTower.width) / 2;
+			let sy = td.selectedTower.pos.y - (sheight - td.selectedTower.height) / 2;
+			let dwidth = td.canvas.width;
+			let dheight = td.canvas.height;
+			td.ctx.drawImage(canvas, sx, sy, swidth, sheight, dx, dy, dwidth, dheight);
+		}
+		this.animations.forEach(anim => {
+			anim.draw(ctx);
+		})
+		this.projectiles.forEach(proj => proj.draw(ctx));
+		ctx.fillStyle = "#333"
+		ctx.font = "24px 'Segoe UI'";
+		ctx.textAlign = "left";
+		ctx.fillText(`Lives: ${this.lives}`, 10, 30);
+		ctx.textAlign = "right";
+		ctx.fillText(`Coin: ${this.players[0].money}`, canvas.width - 10, 30);
+		ctx.textAlign = "center";
+		ctx.fillText(`Wave: ${this.wave.number}`, canvas.width / 2, 30);
+		requestAnimationFrame(this.draw.bind(this));
+	}
+}
+
+function capFirstLetter(string) {
+	return string.replace("-", " ").charAt(0).toUpperCase() + string.slice(1);
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (Game);
+
+function checkLineCircleCollision(point1, point2, circle, radius) {
+	let ABE = Math.atan2(point2.y - point1.y, point2.x - point1.x)
+	let DBE = Math.atan2(circle.y - point1.y, circle.x - point1.x)
+	let CBD = ABE - DBE
+	let BD = Math.sin(CBD) * Math.hypot(circle.y - point1.y, circle.x - point1.x)
+
+
+	if (radius > Math.abs(BD)) {
+		let minX, minY, width, height;
+
+		if (point1.x < point2.x) {
+			minX = point1.x;
+			width = point2.x - minX;
+		} else {
+			minX = point2.x;
+			width = point1.x - minX;
+		}
+		if (point1.y < point2.y) {
+			minY = point1.y;
+			height = point2.y - minY;
+		} else {
+			minY = point2.y;
+			height = point1.y - minY;
+		}
+
+		if (isCircleRectColliding({ pos: { x: circle.x, y: circle.y }, radius: radius }, { pos: { x: minX, y: minY }, width: width, height: height })) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/***/ }),
+/* 9 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Projectile__ = __webpack_require__(2);
+
+
+class Explosive extends __WEBPACK_IMPORTED_MODULE_0__Projectile__["a" /* default */] {
+	constructor(args) {
+		super(args);
+		let { target } = args;
+		this.checkCollision = false;
+		this.target = target;
+	}
+	update() {
+		if (this.pos.distanceTo(this.target) < this.vel.getHyp()) {
+			this.pos = this.target;
+			window.gamesession.detonate(this);
+		} else {
+			this.pos.moveTowards(this.target, this.vel.getHyp());
+		}
+	}
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (Explosive);
+
+/***/ }),
+/* 10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Projectile__ = __webpack_require__(2);
+
+
+class LightningBolt extends __WEBPACK_IMPORTED_MODULE_0__Projectile__["a" /* default */] {
+	constructor(args) {
+		super(args);
+		let { target } = args;
+		this.checkCollision = false;
+		this.color = "#7DF9FF";
+		
+		this.frameCount = 0;
+
+		this.targets = [target];
+		for (let i = 0; i < this.penetration; i++) {
+			let p = this.targets[this.targets.length - 1].pos || this.pos;
+			let enemies = window.gamesession.enemies
+				.filter(e => {
+					return (e.pos.center(-e.width, -e.height).distanceTo(p) <= this.range) && this.targets.indexOf(e) === -1;
+				})
+				.sort((a, b) => a.pos.center(-a.width, -a.height).distanceTo(p) > b.pos.center(-b.width, -b.height).distanceTo(p));
+			let target = enemies[0];
+			if (target) this.targets.push(target);
+		}
+	}
+	update() {
+		this.frameCount++;
+		if (this.frameCount < this.duration) {
+			this.targets.forEach(e => {
+				if (e.hurt(this.damage)) {
+					this.targets.splice(this.targets.indexOf(e), 1);
+				}
+			});
+		} else {
+			let projectiles = window.gamesession.projectiles;
+			projectiles.splice(projectiles.indexOf(this), 1);
+		}
+	}
+	draw(ctx) {
+		ctx.strokeStyle = this.color;
+		ctx.lineWidth = 5;
+		ctx.beginPath();
+		ctx.moveTo(this.pos.x, this.pos.y);
+		this.targets.forEach(target => {
+			let pos = target.pos.center(-target.width, -target.height);
+			ctx.lineTo(pos.x, pos.y);
+		});
+		ctx.stroke();
+		ctx.closePath();
+	}
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (LightningBolt);
+
+/***/ }),
+/* 11 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Tower__ = __webpack_require__(3);
+
+
+class Player {
+	constructor({ name = "Player" }) {
+		this.name = name;
+		this.towers = [];
+		this.money = 300;
+	}
+	buyTower({ vector, tower }) {
+		let towercost = tower.price;
+		if (this.money - towercost >= 0) {
+			this.money = this.money - towercost;
+			this.towers.push(new tower.type({ vector }));
+			return true;
+		}
+		return false;
+	}
+	update() {
+		this.towers.forEach(tower => {
+			tower.update(window.gamesession.enemies);
+		});
+	}
+	draw(ctx) {
+		this.towers.forEach(tower => {
+			tower.draw(ctx);
+		});
+	}
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (Player);
+
+/***/ }),
+/* 12 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Maps__ = __webpack_require__(13);
+
+
+class World {
+	constructor({ mapnr = 0 }) {
+		Object.assign(this, __WEBPACK_IMPORTED_MODULE_0__Maps__["a" /* default */][mapnr]);
+	}
+	isOutOfBounds(vector) {
+		return vector.x < 0 || vector.x > this.width || vector.y < 0 || vector.y > this.height;
+	}
+	draw(ctx) {
+		ctx.fillStyle = this.backgroundColor;
+		ctx.fillRect(0, 0, this.width, this.height);
+		ctx.lineJoin = "round"
+		ctx.beginPath();
+		ctx.strokeStyle = this.pathColor;
+		ctx.lineWidth = this.pathWidth;
+		this.path.forEach((vector, index) => {
+			if (index === 0) return ctx.moveTo(vector.x, vector.y);
+			ctx.lineTo(vector.x, vector.y);
+		})
+		ctx.stroke();
+	}
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (World);
+
+/***/ }),
+/* 13 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Vector__ = __webpack_require__(0);
+
+
+const Maps = {
+	0: {
+		width: 1000,
+		height: 600,
+		backgroundColor: "#fcbf49",
+		// backgroundColor: "#f4d35e",
+		// pathColor: "#003049",
+		pathColor: "#ebebd3",
+		pathWidth: 48,
+		path: [
+			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](-50, 100),
+			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](120, 100),
+			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](100, 300),
+			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](400, 300),
+			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](400, 100),
+			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](275, 100),
+			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](275, 450),
+			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](600, 450),
+			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](600, 200),
+			new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](1050, 200),
+		],
+		props: [
+			{ pos: new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](600, 150), type: "Cactus" }, // Display these on the map allso!
+			{ pos: new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](120, 150), type: "Cactus" },
+			{ pos: new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](300, 450), type: "Cactus" },
+			{ pos: new __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */](750, 320), type: "Cactus" },
+		]
+	}
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (Maps);
+
+/***/ }),
 /* 14 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = GetWave;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Enemy__ = __webpack_require__(4);
+
+
+/*	Queue Object:
+ *		enemies: []Enemy
+ *			which enemies to spawn
+ *		interval: Number
+ *			ms to wait between each enemy. defaults to 250ms
+ *		delay: Number
+ *			ms to wait until next batch. defaults to 1000ms
+ */
+
+function GetWave(wavenr) {
+	let queue = [];
+
+	if (wavenr >= 0) {
+		let batch = {
+			enemies: addN(10 * wavenr, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */]),
+			interval: 1000,
+			delay: 10000,
+		}
+		queue.push(batch);
+	}
+	if (wavenr >= 5) {
+		queue.push({
+			enemies: addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Goblin" }).concat(addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Ogre" })),
+			interval: 500,
+			delay: 2500,
+		})
+		queue.push({
+			enemies: addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Goblin" }).concat(addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Ogre" })),
+			interval: 500,
+			delay: 2500,
+		});
+	}
+	if (wavenr > 10) {
+	}
+	return queue;
+}
+
+function addN(iterations, classFunction) {
+	let restArgs = Array.prototype.slice.call(arguments, 3);
+	if (restArgs.length == 0) restArgs = [{}];
+	let array = [];
+	for (let i = 0; i < iterations; i++) {
+		array.push(new classFunction(...restArgs));
+	}
+	return array;
+}
+
+/***/ }),
+/* 15 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Vector__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_color__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_color___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_color__);
+
+
+
+// let Images = {
+// 	Explosion: NewImage("")
+// }
+
+/**
+ * Animation class for animations
+ */
+class Animation {
+	constructor({ duration, pos }) {
+		this.startTime = Date.now();
+		this.duration = duration;
+		this.pos = pos;
+	}
+	update() {
+		this.frameCount++;
+		if (this.frameCount > this.duration) {
+			let anims = window.gamesession.animations;
+			anims.splice(anims.indexOf(this), 1);
+			return;
+		}
+		this.particles.forEach(particle => {
+			particle.update();
+		})
+	}
+	draw(ctx) {
+		this.particles.forEach(particle => {
+			particle.draw(ctx, 1 - this.frameCount / this.duration);
+		})
+	}
+}
+/* unused harmony export Animation */
+
+
+/**
+ * Particle class
+ * @param {number} width
+ * @param {Vector} vel
+ * @param {Vector} pos
+ */
+
+class Particle {
+	constructor({ width = 8, height = 8, color, vel, pos }) {
+		this.width = width;
+		this.height = height;
+		this.color = color;
+		this.vel = vel;
+		this.pos = pos;
+	}
+	draw(ctx, opacity) {
+		ctx.fillStyle = __WEBPACK_IMPORTED_MODULE_1_color___default.a(this.color).alpha(opacity);
+		ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+	}
+	update() {
+		this.pos.add(this.vel);
+	}
+}
+
+class Damage extends Animation {
+	constructor({ pos, duration = 20 }) {
+		super({ pos, duration });
+		this.particles = [];
+		this.frameCount = 0;
+
+		let particleNum = ((Math.random() * 5) | 0) + 5;
+		for (let i = 0; i < particleNum; i++) {
+			this.particles.push(new Particle({ color: "#d62f2f", pos: this.pos.clone(), vel: __WEBPACK_IMPORTED_MODULE_0__Vector__["a" /* default */].createFromAngle(Math.random() * Math.PI * 2, Math.random() + 1) }));
+		}
+	}
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Damage;
+
+
+class Explosion extends Animation {
+	constructor({ pos, radius }) {
+		super({ pos });
+		this.vel = 8;
+		this.radius = radius;
+		this.currentRadius = 0;
+	}
+	draw(ctx) {
+		ctx.beginPath();
+		ctx.arc(this.pos.x, this.pos.y, this.currentRadius, 0, Math.PI * 2);
+		ctx.strokeStyle = __WEBPACK_IMPORTED_MODULE_1_color___default.a.rgb(120, 120, 120).alpha(1 - this.currentRadius / this.radius);
+		ctx.lineWidth = 25;
+		ctx.stroke();
+		ctx.closePath();
+	}
+	update() {
+		this.currentRadius += this.vel;
+		if (this.currentRadius > this.radius) {
+			let anims = window.gamesession.animations;
+			anims.splice(anims.indexOf(this), 1);
+		}
+	}
+}
+/* harmony export (immutable) */ __webpack_exports__["b"] = Explosion;
+
+
+/***/ }),
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var colorString = __webpack_require__(15);
-var convert = __webpack_require__(18);
+var colorString = __webpack_require__(17);
+var convert = __webpack_require__(20);
 
 var _slice = [].slice;
 
@@ -2919,12 +3033,12 @@ module.exports = Color;
 
 
 /***/ }),
-/* 15 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* MIT license */
-var colorNames = __webpack_require__(12);
-var swizzle = __webpack_require__(16);
+var colorNames = __webpack_require__(5);
+var swizzle = __webpack_require__(18);
 
 var reverseNames = {};
 
@@ -3158,13 +3272,13 @@ function hexDouble(num) {
 
 
 /***/ }),
-/* 16 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var isArrayish = __webpack_require__(17);
+var isArrayish = __webpack_require__(19);
 
 var concat = Array.prototype.concat;
 var slice = Array.prototype.slice;
@@ -3194,7 +3308,7 @@ swizzle.wrap = function (fn) {
 
 
 /***/ }),
-/* 17 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3212,11 +3326,11 @@ module.exports = function isArrayish(obj) {
 
 
 /***/ }),
-/* 18 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var conversions = __webpack_require__(13);
-var route = __webpack_require__(19);
+var conversions = __webpack_require__(6);
+var route = __webpack_require__(21);
 
 var convert = {};
 
@@ -3296,10 +3410,10 @@ module.exports = convert;
 
 
 /***/ }),
-/* 19 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var conversions = __webpack_require__(13);
+var conversions = __webpack_require__(6);
 
 /*
 	this function routes a model to all other models.
@@ -3398,120 +3512,6 @@ module.exports = function (fromModel) {
 };
 
 
-
-/***/ }),
-/* 20 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = GetWave;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Enemy__ = __webpack_require__(2);
-
-
-/*	Queue Object:
- *		enemies: []Enemy
- *			which enemies to spawn
- *		interval: Number
- *			ms to wait between each enemy. defaults to 250ms
- *		delay: Number
- *			ms to wait until next batch. defaults to 1000ms
- */
-
-function GetWave(wavenr) {
-	let queue = [];
-
-	if (wavenr >= 0) {
-		let batch = {
-			enemies: addN(10 * wavenr, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */]),
-			interval: 1000,
-			delay: 10000,
-		}
-		queue.push(batch);
-	}
-	if (wavenr >= 5) {
-		queue.push({
-			enemies: addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Goblin" }).concat(addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Ogre" })),
-			interval: 500,
-			delay: 2500,
-		})
-		queue.push({
-			enemies: addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Goblin" }).concat(addN(15, __WEBPACK_IMPORTED_MODULE_0__Enemy__["a" /* default */], { type: "Ogre" })),
-			interval: 500,
-			delay: 2500,
-		});
-	}
-	if (wavenr > 10) {
-	}
-	return queue;
-}
-
-function addN(iterations, classFunction) {
-	let restArgs = Array.prototype.slice.call(arguments, 3);
-	if (restArgs.length == 0) restArgs = [{}];
-	let array = [];
-	for (let i = 0; i < iterations; i++) {
-		array.push(new classFunction(...restArgs));
-	}
-	return array;
-}
-
-/***/ }),
-/* 21 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Projectile__ = __webpack_require__(4);
-
-
-class LightningBolt extends __WEBPACK_IMPORTED_MODULE_0__Projectile__["a" /* default */] {
-	constructor(args) {
-		super(args);
-		let { target } = args;
-		this.checkCollision = false;
-		this.color = "#7DF9FF";
-		
-		this.frameCount = 0;
-
-		this.targets = [target];
-		for (let i = 0; i < this.penetration; i++) {
-			let p = this.targets[this.targets.length - 1].pos || this.pos;
-			let enemies = window.gamesession.enemies
-				.filter(e => {
-					return (e.pos.center(-e.width, -e.height).distanceTo(p) <= this.range) && this.targets.indexOf(e) === -1;
-				})
-				.sort((a, b) => a.pos.center(-a.width, -a.height).distanceTo(p) > b.pos.center(-b.width, -b.height).distanceTo(p));
-			let target = enemies[0];
-			if (target) this.targets.push(target);
-		}
-	}
-	update() {
-		this.frameCount++;
-		if (this.frameCount < this.duration) {
-			this.targets.forEach(e => {
-				if (e.hurt(this.damage)) {
-					this.targets.splice(this.targets.indexOf(e), 1);
-				}
-			});
-		} else {
-			let projectiles = window.gamesession.projectiles;
-			projectiles.splice(projectiles.indexOf(this), 1);
-		}
-	}
-	draw(ctx) {
-		ctx.strokeStyle = this.color;
-		ctx.lineWidth = 5;
-		ctx.beginPath();
-		ctx.moveTo(this.pos.x, this.pos.y);
-		this.targets.forEach(target => {
-			let pos = target.pos.center(-target.width, -target.height);
-			ctx.lineTo(pos.x, pos.y);
-		});
-		ctx.stroke();
-		ctx.closePath();
-	}
-}
-
-/* harmony default export */ __webpack_exports__["a"] = (LightningBolt);
 
 /***/ })
 /******/ ]);
